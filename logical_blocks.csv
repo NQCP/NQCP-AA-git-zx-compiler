@@ -1,0 +1,26 @@
+index,ports
+logical_block:1,ports:{'up': 'q1', 'down': 'q1', 'north': None, 'south': 2, 'east': None, 'west': None}
+logical_block:2,ports:{'up': None, 'down': None, 'north': 1, 'south': 3, 'east': 5, 'west': None}
+logical_block:3,ports:{'up': 'q6', 'down': 'q6', 'north': None, 'south': 2, 'east': None, 'west': None}
+logical_block:4,ports:{'up': 'q7', 'down': 'q7', 'north': None, 'south': 5, 'east': None, 'west': None}
+logical_block:5,ports:{'up': None, 'down': None, 'north': 4, 'south': 6, 'east': 8, 'west': 2}
+logical_block:6,ports:{'up': 'q8', 'down': 'q8', 'north': None, 'south': 5, 'east': None, 'west': None}
+logical_block:7,ports:{'up': 'q10', 'down': 'q10', 'north': None, 'south': 8, 'east': None, 'west': None}
+logical_block:8,ports:{'up': None, 'down': None, 'north': 7, 'south': 9, 'east': 11, 'west': 5}
+logical_block:9,ports:{'up': 'q11', 'down': 'q11', 'north': None, 'south': 8, 'east': None, 'west': None}
+logical_block:10,ports:{'up': 'q12', 'down': 'q12', 'north': None, 'south': 11, 'east': None, 'west': None}
+logical_block:11,ports:{'up': None, 'down': None, 'north': 12, 'south': 13, 'east': 10, 'west': 8}
+logical_block:12,ports:{'up': 'q13', 'down': 'q13', 'north': None, 'south': 11, 'east': None, 'west': None}
+logical_block:13,ports:{'up': 'bridge', 'down': None, 'north': 15, 'south': 11, 'east': None, 'west': None}
+logical_block:14,ports:{'up': 'q2', 'down': 'q2', 'north': 15, 'south': None, 'east': None, 'west': None}
+logical_block:15,ports:{'up': None, 'down': None, 'north': 14, 'south': 16, 'east': 13, 'west': 18}
+logical_block:16,ports:{'up': 'q3', 'down': 'q3', 'north': 15, 'south': None, 'east': None, 'west': None}
+logical_block:17,ports:{'up': 'q4', 'down': 'q4', 'north': 18, 'south': None, 'east': None, 'west': None}
+logical_block:18,ports:{'up': None, 'down': None, 'north': 17, 'south': 19, 'east': 15, 'west': 21}
+logical_block:19,ports:{'up': 'q5', 'down': 'q5', 'north': 18, 'south': None, 'east': None, 'west': None}
+logical_block:20,ports:{'up': 'q7', 'down': 'q7', 'north': 21, 'south': None, 'east': None, 'west': None}
+logical_block:21,ports:{'up': None, 'down': None, 'north': 20, 'south': 22, 'east': 18, 'west': 24}
+logical_block:22,ports:{'up': 'q8', 'down': 'q8', 'north': 21, 'south': None, 'east': None, 'west': None}
+logical_block:23,ports:{'up': 'q9', 'down': 'q9', 'north': 24, 'south': None, 'east': None, 'west': None}
+logical_block:24,ports:{'up': None, 'down': None, 'north': 23, 'south': 25, 'east': None, 'west': 21}
+logical_block:25,ports:{'up': 'q10', 'down': 'q10', 'north': 24, 'south': None, 'east': None, 'west': None}
