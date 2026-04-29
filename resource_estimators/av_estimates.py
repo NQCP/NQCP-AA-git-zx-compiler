@@ -1,3 +1,8 @@
+import sys
+import os
+# Add parent directory to path to allow imports when running as script
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np 
 import matplotlib.pyplot as plt
 from resource_estimators.av_compilation import calculate_total_active_volume_from_csv

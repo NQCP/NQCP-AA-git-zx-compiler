@@ -1,12 +1,15 @@
+from pathlib import Path
+
 from pygridsynth.gridsynth import gridsynth_gates
 from pygridsynth.myplot import plot_sol
 import mpmath
 import numpy as np
+from qiskit import QuantumCircuit, qasm3
 from qiskit.circuit.library import UnitaryGate
-from qiskit import QuantumCircuit
+from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.qasm2 import dumps
 
-precision = "1e-3"
+precision = "1e-10"
 mpmath.mp.dps = 256
 
 w = np.exp(1j*np.pi/4)
@@ -38,11 +41,41 @@ def rot_decompose(qc, theta, qubit):
         elif gate == 'Z':
             qc.z(qubit)
 
+
+def _is_openqasm3_header(line: str) -> bool:
+    s = line.strip().upper()
+    if not s.startswith("OPENQASM"):
+        return False
+    # e.g. OPENQASM 3.0; or OPENQASM 3;
+    return "OPENQASM 3" in s or s.startswith("OPENQASM3")
+
+
+def circuit_from_qasm_file(path_to_qasm: str) -> QuantumCircuit:
+    """Load OpenQASM 2 or 3 into a QuantumCircuit.
+
+    QASM 3 uses ``qiskit.qasm3.load`` when ``qiskit_qasm3_import`` is installed,
+    otherwise the experimental importer (may emit ExperimentalWarning).
+    """
+    path = Path(path_to_qasm)
+    text = path.read_text()
+    is_v3 = False
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("//"):
+            continue
+        if _is_openqasm3_header(stripped):
+            is_v3 = True
+        break
+    if is_v3:
+        try:
+            return qasm3.load(path)
+        except MissingOptionalLibraryError:
+            return qasm3.load_experimental(path)
+    return QuantumCircuit.from_qasm_str(text)
+
+
 def logical_to_universal(path_to_qasm):
-    
-    with open(path_to_qasm, 'r') as f:
-        qasm_str = f.read()
-    qc = QuantumCircuit.from_qasm_str(qasm_str)
+    qc = circuit_from_qasm_file(path_to_qasm)
     qc_universal = QuantumCircuit(qc.num_qubits)
     for gate in qc.data:
         if gate[0].name == 'rz':
@@ -53,7 +86,7 @@ def logical_to_universal(path_to_qasm):
 
 # print(logical_to_universal('ppr_circuits/trotter_circuit_v2_logical.qasm'))
 # save as qasm file 
-qc_universal = logical_to_universal('ppr_circuits/trotter_circuit_v2_logical.qasm')
+qc_universal = logical_to_universal('ppr_circuits/heisenberg_2d_step_s6.qasm')
 qasm_str = dumps(qc_universal)
-with open('ppr_circuits/trotter_circuit_v2_universal.qasm', 'w') as f:
+with open('ppr_circuits/heisenberg_2d_step_s6_universal.qasm', 'w') as f:
     f.write(qasm_str)

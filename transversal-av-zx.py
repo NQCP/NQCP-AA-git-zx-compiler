@@ -6,12 +6,34 @@ Circles have up/down ports (qubit indices). Two-qubit gates have two circles wit
 import re
 import json
 
+cultivation = False
+distillation = True
+
 # Gates to ignore (Pauli operators)
 IGNORE_GATES = {'x', 'y', 'z'}
 
 # Active volume per gate type (T_AV can be changed)
-T_AV = 23
-ACTIVE_VOLUME = {'s': 1/7, 't': T_AV, 'h': 1/7, 'cx': 2/7}
+if distillation:
+    d = 17 # heisenberg is 15
+    time_to_distill = 117.5/d
+    time_to_inject = 4.5/d  
+    ACTIVE_VOLUME = {'s': 1/d, 
+                     't': time_to_distill + time_to_inject, 
+                     'h': 1/d, 
+                     'cx': 2/d, 
+                     'sdg': 1/d}
+
+# cultivation assumptions:
+if cultivation:
+    time_to_cultivate = 14.3/d # code cycles
+    time_to_inject = 4.5/d # code cyles 
+    qubits_per_factory = 787
+    ACTIVE_VOLUME = {'s': 1/d, 
+                     't': (time_to_cultivate + time_to_inject), 
+                     'h': 1/d, 
+                     'cx': 2/d, 
+                     'sdg': 1/d}
+
 
 
 def parse_qasm_line(line):
@@ -28,7 +50,7 @@ def parse_qasm_line(line):
     if gate in IGNORE_GATES:
         return None
 
-    if gate not in {'s', 't', 'h', 'cx'}:
+    if gate not in {'s', 't', 'h', 'cx', 'sdg'}:
         return None
 
     qubit_part = ' '.join(parts[1:]).rstrip(';')
@@ -60,7 +82,7 @@ def gate_to_sequence(gate, qubits, seq_id):
             }
         ]
     else:
-        # Single qubit gate: s, t, h
+        # Single qubit gate: s, t, h, sdg
         q = qubits[0]
         circles = [
             {
@@ -73,7 +95,7 @@ def gate_to_sequence(gate, qubits, seq_id):
             }
         ]
 
-    phase = "pi/2" if gate == 's' else ""
+    phase = "pi/2" if gate == 's' or gate == 'sdg' else ""
     active_volume = ACTIVE_VOLUME.get(gate, 1)
 
     return {
@@ -85,7 +107,7 @@ def gate_to_sequence(gate, qubits, seq_id):
     }
 
 
-def qasm_to_transversal_blocks(qasm_path, output_path='transversal-logical-blocks.json'):
+def qasm_to_transversal_blocks(qasm_path, output_path='transversal-logical-blocks-heisenberg.json'):
     """Parse QASM file and write transversal-logical-blocks.json."""
     sequences = []
     seq_idx = 0
@@ -109,6 +131,6 @@ def qasm_to_transversal_blocks(qasm_path, output_path='transversal-logical-block
 
 
 if __name__ == '__main__':
-    sequences = qasm_to_transversal_blocks('ppr_circuits/trotter_circuit_v2.qasm')
+    sequences = qasm_to_transversal_blocks('ppr_circuits/heisenberg_2d_step_s6_universal.qasm')
     total_av = sum(s['active_volume'] for s in sequences)
     print(f"Sum of active volume: {total_av}")

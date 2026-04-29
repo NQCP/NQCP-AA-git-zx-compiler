@@ -1,3 +1,8 @@
+import sys
+import os
+# Add parent directory to path to allow imports when running as script
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np 
 import matplotlib.pyplot as plt
 from resource_estimators.av_estimates import av_estimator
@@ -19,6 +24,7 @@ def baseline_estimator(ppr_file):
     msd_production_rate = 11 
     total_msd_tiles = magic_state_tiles * msd_production_rate # to have production rate of 1 msd per cycle
     total_tiles = num_data_tiles + num_workspace_tiles + total_msd_tiles
+    print('total_tiles: ', total_tiles)
 
     total_msd_tiles_compact = magic_state_tiles
     total_tiles_compact = num_data_tiles_compact + total_msd_tiles_compact
@@ -69,7 +75,10 @@ def baseline_estimator(ppr_file):
                 print(f"Distance {distance} is not sufficient for physical error rate {physical_error_rate}")
 
     # circuit volumes 
+    
     circ_volume_baseline = total_tiles * total_clock_cycles
+    print('total_tiles: ', total_tiles)
+    print('total_clock_cycles: ', total_clock_cycles)
     circ_volume_compact = total_tiles_compact * total_clock_cycles_compact
     circ_volume_av = calculate_total_active_volume_from_csv(ppr_file)
     print('circuit volume baseline: ', circ_volume_baseline, 'circuit volume compact: ', circ_volume_compact, 'circuit volume av: ', circ_volume_av)
@@ -122,4 +131,9 @@ def baseline_estimator(ppr_file):
 
     plt.savefig('plots/resource_estimates_'+ppr_file.split('/')[-1].split('.')[0]+'.pdf')
     plt.show()
+    print('total_tiles:' , total_tiles)
+
+if __name__ == '__main__':
+    ppr_file = 'ppr_circuits/trotter_circuit_v2_paulis_commuted.csv'
+    baseline_estimator(ppr_file)
 

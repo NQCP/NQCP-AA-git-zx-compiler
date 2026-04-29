@@ -5,6 +5,24 @@ import json
 import os
 import csv
 
+def active_volume_exact(sequence):
+    z_count = 0
+    x_count = 0
+    y_count = 0
+    for i in range(len(sequence)):
+        if sequence[i] == 'z':
+            z_count += 1
+        elif sequence[i] == 'x':
+            x_count += 1
+        elif sequence[i] == 'y':
+            z_count  += 1
+            x_count += 1
+            y_count += 1
+    if y_count % 2 != 0: 
+        x_count += 1
+        z_count += 1
+    return np.ceil(3/2 * x_count) + np.ceil(3/2 * z_count) + 1
+
 
 class Hexagon:
     def __init__(self, index):
@@ -93,13 +111,20 @@ def process_sequence_to_hexagons(sequence_input):
     connector_idx = int(ancilla_nodes_left + ancilla_nodes_right + qubit_nodes_left + qubit_nodes_right)
     G.nodes[connector_idx]['label'] = 'connector'
     G.nodes[connector_idx]['color'] = 'orange'
+
+     # Connect blue ancillas to each other
+    # for i in range(int(ancilla_nodes_left) - 1):
+    #     G.add_edge(i, i+1)
     
-    # Connect blue ancillas to each other
-    for i in range(int(ancilla_nodes_left) - 1):
-        G.add_edge(i, i+1)
+    # # Connect last blue ancilla to connector
+    # G.add_edge(int(ancilla_nodes_left) - 1, connector_idx, color='red')
     
-    # Connect last blue ancilla to connector
-    G.add_edge(int(ancilla_nodes_left) - 1, connector_idx, color='red')
+    # Connect blue ancillas to each other (only when there are blue ancillas)
+    if ancilla_nodes_left > 0:
+        for i in range(int(ancilla_nodes_left) - 1):
+            G.add_edge(i, i+1)
+        # Connect last blue ancilla to connector
+        G.add_edge(int(ancilla_nodes_left) - 1, connector_idx, color='red')
     
     # Connect yellow ancillas to each other and finally to the connector
     start_yellow = int(ancilla_nodes_left)
@@ -197,6 +222,16 @@ def process_sequence_to_hexagons(sequence_input):
     
     # Convert total_nodes to int for JSON serialization
     active_volume = int(total_nodes)
+
+    # verify that the active volume matches the expected active volume
+    # get the sequence
+    
+    expected_active_volume = active_volume_exact(sequence_input)
+    if active_volume != expected_active_volume:
+        print(f"Active volume mismatch: {active_volume} != {expected_active_volume}")
+        print(f"Sequence: {sequence_input}")
+        print(f"Hexagons: {hexagon_data}")
+        raise ValueError(f"Active volume mismatch: {active_volume} != {expected_active_volume}")
     
     return hexagon_data, active_volume
 

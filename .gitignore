@@ -1,0 +1,20 @@
+# Python virtualenvs
+.venv/
+venv/
+env/
+
+# Bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# macOS
+.DS_Store
+
+# Large data files (>100 MB GitHub limit)
+transversal-logical-blocks*.json
+ppr_circuits/heisenberg_2d_step_s6_universal_paulis.csv
+ppr_circuits/circacomp_decomposed_paulis copy.csv
+
+# Haskell build artifacts
+feynman/dist-newstyle/
