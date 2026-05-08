@@ -86,7 +86,7 @@ def logical_to_universal(path_to_qasm):
 
 # print(logical_to_universal('ppr_circuits/trotter_circuit_v2_logical.qasm'))
 # save as qasm file 
-qc_universal = logical_to_universal('ppr_circuits/heisenberg_2d_step_s6.qasm')
+qc_universal = logical_to_universal('ppr_circuits/fermi_hubbard_2d_step_s4.qasm')
 qasm_str = dumps(qc_universal)
-with open('ppr_circuits/heisenberg_2d_step_s6_universal.qasm', 'w') as f:
+with open('ppr_circuits/fermi_hubbard_2d_step_s4_universal.qasm', 'w') as f:
     f.write(qasm_str)
