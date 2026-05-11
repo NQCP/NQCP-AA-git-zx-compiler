@@ -7,17 +7,17 @@ COMMUTING_RULES = {
     ("i", "y"): (True, 1, "y"),
     ("i", "z"): (True, 1, "z"),
     ("x", "i"): (True, 1, "x"),
-    ("x", "x"): (True, 1, "x"),
+    ("x", "x"): (True, 1, "i"),
     ("x", "y"): (False, -1, "z"),
     ("x", "z"): (False, 1, "y"),
     ("y", "i"): (True, 1, "y"),
     ("y", "x"): (False, 1, "z"),
-    ("y", "y"): (True, 1, "y"),
+    ("y", "y"): (True, 1, "i"),
     ("y", "z"): (False, -1, "x"),
     ("z", "i"): (True, 1, "z"),
     ("z", "x"): (False, -1, "y"),
     ("z", "y"): (False, 1, "x"),
-    ("z", "z"): (True, 1, "z"),
+    ("z", "z"): (True, 1, "i"),
 }
 
 
