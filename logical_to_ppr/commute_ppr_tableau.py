@@ -1,9 +1,9 @@
 """Bit-exact tableau-based commute_cliffords_to_end.
 
 Walks the rotation list forward in time. Maintains a Clifford "frame" F
-such that for each non-Clifford rotation T (or measurement), we emit
-T_new with Pauli = F · T.Pauli · F† and angle's sign multiplied by the
-sign of that Pauli image.
+such that for each non-Clifford rotation T, we emit T_new with
+Pauli = F · T.Pauli · F† and angle's sign multiplied by the sign of
+that Pauli image.
 
 For purely unitary, unconditional rotation lists (the universal QASM
 inputs in this repo), this produces byte-for-byte equivalent output to
@@ -20,7 +20,6 @@ from typing import Dict, List, Sequence, Tuple
 from logical_to_ppr.ppr_functions import write_condition
 from logical_to_ppr.commute_ppr_optimized import (
     parse_paulis_file,
-    PAULI_TO_CODE,
     CODE_TO_PAULI,
 )
 
@@ -185,7 +184,8 @@ def commuted_ppr(pauli_file_name: str) -> None:
         if conditions:
             raise NotImplementedError("tableau impl: conditional rotations not yet handled")
 
-        if 2 <= abs(angle) <= 4:
+        if abs(angle) in (2, 4):
+            # Clifford rotation: absorb into the frame F.
             F.apply_clifford(angle, bases_sparse)
             continue
 
