@@ -15,6 +15,7 @@ Run:
 
 from __future__ import annotations
 import os
+import tempfile
 import numpy as np
 from scipy.linalg import expm
 
@@ -62,25 +63,26 @@ def identify_pauli(mat, n):
 # Test harness: build a tiny CSV, run tableau, compare to numpy
 # ----------------------------------------------------------------------------
 
-def run_tableau(rotations, n_qubits, tmpfile="/tmp/verify_tableau_in.csv"):
+def run_tableau(rotations, n_qubits):
     """rotations = list of (angle, [letters]) tuples in time order.
-    Writes a paulis.csv, runs commute_ppr_tableau.commuted_ppr, returns the
-    emitted T-rotation rows as a list of (angle, [letters])."""
-    with open(tmpfile, "w") as f:
-        for angle, bases in rotations:
-            assert len(bases) == n_qubits
-            f.write(f"rotate,{angle},{','.join(bases)},,\n")
-    commuted_ppr(tmpfile)
-    out_path = tmpfile.replace(".csv", "_commuted.csv")
-    rows = []
-    with open(out_path) as f:
-        for line in f:
-            parts = line.rstrip("\n").split(",")
-            angle = int(parts[1])
-            pauli = parts[2 : 2 + n_qubits]
-            rows.append((angle, pauli))
-    os.remove(tmpfile)
-    os.remove(out_path)
+    Writes a paulis.csv inside a TemporaryDirectory, runs
+    commute_ppr_tableau.commuted_ppr, returns the emitted T-rotation rows
+    as a list of (angle, [letters])."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpfile = os.path.join(tmpdir, "verify_tableau_in.csv")
+        with open(tmpfile, "w") as f:
+            for angle, bases in rotations:
+                assert len(bases) == n_qubits
+                f.write(f"rotate,{angle},{','.join(bases)},,\n")
+        commuted_ppr(tmpfile)
+        out_path = tmpfile.replace(".csv", "_commuted.csv")
+        rows = []
+        with open(out_path) as f:
+            for line in f:
+                parts = line.rstrip("\n").split(",")
+                angle = int(parts[1])
+                pauli = parts[2 : 2 + n_qubits]
+                rows.append((angle, pauli))
     return rows
 
 
@@ -145,6 +147,8 @@ def main():
         n_q = len(T[1])
         # Build full rotation list: cliffords in order, then T.
         rotations = list(cliffords) + [T]
+        err = None
+        actual_angle = actual_pauli = expected_angle = exp_pauli = None
         try:
             actual_rows = run_tableau(rotations, n_q)
             assert len(actual_rows) == 1, (
@@ -156,8 +160,6 @@ def main():
             ok = actual_angle == expected_angle and actual_pauli == exp_pauli
         except Exception as e:
             ok = False
-            actual_angle, actual_pauli = None, None
-            expected_angle, exp_pauli = None, None
             err = repr(e)
         if ok:
             n_pass += 1
@@ -168,7 +170,7 @@ def main():
             print(f"  FAIL  {desc}")
             print(f"          numpy:    {expected_angle} * {exp_pauli}")
             print(f"          tableau:  {actual_angle} * {actual_pauli}")
-            if "err" in dir():
+            if err is not None:
                 print(f"          err:      {err}")
 
     print()
