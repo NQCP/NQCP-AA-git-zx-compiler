@@ -4,6 +4,7 @@ import networkx as nx
 import json
 import os
 import csv
+import gzip
 
 def active_volume_exact(sequence):
     z_count = 0
@@ -308,7 +309,7 @@ def append_sequence_to_json(sequence_input, sequence_id=None, filename='sequence
 
 if __name__ == '__main__':
     # Read sequences from CSV file
-    csv_file = 'ppr_circuits/trotter_circuit_v2_paulis_commuted.csv'
+    csv_file = 'ppr_circuits/fermi_hubbard_2d_step_s4_universal_paulis_commuted.csv'
     all_sequences_data = []
     
     print(f"Reading sequences from {csv_file}...")
@@ -345,6 +346,6 @@ if __name__ == '__main__':
                 continue
     
 
-    print(f"\nSaving {len(all_sequences_data)} sequences to logical_blocks.json...")
-    save_sequences_to_json(all_sequences_data, filename='logical_blocks.json')
+    print(f"\nSaving {len(all_sequences_data)} sequences to logical_blocks_fermi_hubbard_2d_step_s4_universal_paulis_commuted.json...")
+    save_sequences_to_json(all_sequences_data, filename='logical_blocks_fermi_hubbard_2d_step_s4_universal_paulis_commuted.json')
     print(f"Done! Total sequences processed: {len(all_sequences_data)}")
