@@ -12,9 +12,13 @@ __pycache__/
 .DS_Store
 
 # Large data files (>100 MB GitHub limit)
-transversal-logical-blocks*.json
-ppr_circuits/heisenberg_2d_step_s6_universal_paulis.csv
-ppr_circuits/circacomp_decomposed_paulis copy.csv
+
+ppr_circuits/
+miscellaneous/
+logical_network_files/
+bell_pairs_data/
+paper_plots/
+paper_figures/
 
 # Haskell build artifacts
 feynman/dist-newstyle/
