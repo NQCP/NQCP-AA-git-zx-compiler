@@ -10,6 +10,7 @@ where k ∈ {0, 1, ..., floor(log2(N))}, N = 172.
 Valid distances: 1, 2, 4, 8, 16, 32, 64, 128.
 """
 
+import gzip
 import json
 import math
 from collections import deque
@@ -26,6 +27,10 @@ VALID_DISTANCES = frozenset(2**k for k in range(MAX_K + 1))  # {1, 2, 4, 8, 16, 
 
 
 def load_sequences(filename=LOGICAL_BLOCKS_FILE):
+    """Load sequences from a JSON file, or a gzipped JSON-Lines file (.jsonl.gz)."""
+    if filename.endswith('.gz'):
+        with gzip.open(filename, 'rt') as f:
+            return [json.loads(line) for line in f if line.strip()]
     with open(filename) as f:
         return json.load(f)
 

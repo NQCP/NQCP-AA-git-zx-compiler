@@ -1,6 +1,6 @@
 from resource_estimators.baseline_estimates import baseline_estimator
 from logical_to_ppr.ppr_functions import qasm_to_paulis
-from logical_to_ppr.commute_ppr import commuted_ppr
+from logical_to_ppr.commute_ppr_tableau import commuted_ppr
 
 circuit_name = 'fermi_hubbard_2d_step_s4_universal'
 

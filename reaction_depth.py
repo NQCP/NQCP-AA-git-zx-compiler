@@ -1,3 +1,4 @@
+import gzip
 import json
 import numpy as np
 import matplotlib
@@ -15,9 +16,13 @@ LOGICAL_BLOCKS_FILE = 'logical_blocks.json'
 
 
 def load_sequences(filename=LOGICAL_BLOCKS_FILE):
-    """Load sequences from JSON file."""
-    with open(filename, 'r') as f:
-        sequences = json.load(f)
+    """Load sequences from a JSON file, or a gzipped JSON-Lines file (.jsonl.gz)."""
+    if filename.endswith('.gz'):
+        with gzip.open(filename, 'rt') as f:
+            sequences = [json.loads(line) for line in f if line.strip()]
+    else:
+        with open(filename, 'r') as f:
+            sequences = json.load(f)
     print(f"Loaded {len(sequences)} sequences from {filename}")
     return sequences
 

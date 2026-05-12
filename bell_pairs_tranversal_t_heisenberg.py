@@ -24,8 +24,8 @@ from collections import Counter
 
 # Parameters
 t_count_per_cycle = 4
-INPUT_FILE = "transversal-logical-blocks-heisenberg.json"
-OUTPUT_CSV = "bell_pairs_per_cycle_heisenberg.csv"
+INPUT_FILE = "transversal-logical-blocks-fermi-hubbard.json"
+OUTPUT_CSV = "bell_pairs_per_cycle_fermi_hubbard.csv"
 
 TILE = {"s": 1, "h": 1, "cx": 2, "t": 2, "sdg": 1}
 BELL_PAIR_TILES = 2

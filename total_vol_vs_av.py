@@ -4,6 +4,7 @@ Shows how much idle volume is not being used in each cycle.
 Also includes reaction-depth plot (parallel PPRs vs logical cycles).
 """
 
+import gzip
 import json
 from collections import deque
 
@@ -46,9 +47,17 @@ def schedule_sequences(sequences, total_capacity=TOTAL_LOGICAL_BLOCKS):
     return schedule
 
 
+def load_sequences(filename=LOGICAL_BLOCKS_JSON):
+    """Load sequences from a JSON file, or a gzipped JSON-Lines file (.jsonl.gz)."""
+    if filename.endswith('.gz'):
+        with gzip.open(filename, 'rt') as f:
+            return [json.loads(line) for line in f if line.strip()]
+    with open(filename) as f:
+        return json.load(f)
+
+
 def main():
-    with open(LOGICAL_BLOCKS_JSON) as f:
-        data = json.load(f)
+    data = load_sequences(LOGICAL_BLOCKS_JSON)
 
     try:
         plt.style.use("plotstylefile.mplstyle")

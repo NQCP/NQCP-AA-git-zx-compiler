@@ -15,8 +15,8 @@ IGNORE_GATES = {'x', 'y', 'z'}
 # Active volume per gate type (T_AV can be changed)
 if distillation:
     d = 17 # heisenberg is 15
-    time_to_distill = 117.5/d
-    time_to_inject = 4.5/d  
+    time_to_distill = 132.5/d
+    time_to_inject = 3.5/d  
     ACTIVE_VOLUME = {'s': 1/d, 
                      't': time_to_distill + time_to_inject, 
                      'h': 1/d, 
@@ -26,7 +26,7 @@ if distillation:
 # cultivation assumptions:
 if cultivation:
     time_to_cultivate = 14.3/d # code cycles
-    time_to_inject = 4.5/d # code cyles 
+    time_to_inject = 3.5/d # code cyles 
     qubits_per_factory = 787
     ACTIVE_VOLUME = {'s': 1/d, 
                      't': (time_to_cultivate + time_to_inject), 
@@ -107,7 +107,7 @@ def gate_to_sequence(gate, qubits, seq_id):
     }
 
 
-def qasm_to_transversal_blocks(qasm_path, output_path='transversal-logical-blocks-heisenberg.json'):
+def qasm_to_transversal_blocks(qasm_path, output_path='transversal-logical-blocks-fermi-hubbard.json'):
     """Parse QASM file and write transversal-logical-blocks.json."""
     sequences = []
     seq_idx = 0
@@ -131,6 +131,6 @@ def qasm_to_transversal_blocks(qasm_path, output_path='transversal-logical-block
 
 
 if __name__ == '__main__':
-    sequences = qasm_to_transversal_blocks('ppr_circuits/heisenberg_2d_step_s6_universal.qasm')
+    sequences = qasm_to_transversal_blocks('ppr_circuits/fermi_hubbard_2d_step_s4_universal.qasm')
     total_av = sum(s['active_volume'] for s in sequences)
     print(f"Sum of active volume: {total_av}")

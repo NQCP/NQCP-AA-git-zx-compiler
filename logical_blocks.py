@@ -308,44 +308,44 @@ def append_sequence_to_json(sequence_input, sequence_id=None, filename='sequence
 
 
 if __name__ == '__main__':
-    # Read sequences from CSV file
     csv_file = 'ppr_circuits/fermi_hubbard_2d_step_s4_universal_paulis_commuted.csv'
-    all_sequences_data = []
-    
+    out_file = 'logical_blocks_fermi_hubbard_2d_step_s4_universal_paulis_commuted.jsonl.gz'
+
     print(f"Reading sequences from {csv_file}...")
-    
-    with open(csv_file, 'r') as f:
-        reader = csv.reader(f)
+    print(f"Streaming output to {out_file}...")
+
+    n_written = 0
+    n_errors = 0
+    with open(csv_file, 'r') as fin, gzip.open(out_file, 'wt') as fout:
+        reader = csv.reader(fin)
         for row_idx, row in enumerate(reader):
-            # Skip empty rows
             if not row or len(row) < 3:
                 continue
-            
+
             sequence = [gate.strip() for gate in row[2:] if gate.strip() != '']
-            
-            # Skip if sequence is empty
             if not sequence:
                 continue
-            
-            # Process the sequence
+
             try:
                 hexagons, active_volume = process_sequence_to_hexagons(sequence)
-                all_sequences_data.append({
-                    'sequence_id': f'seq_{row_idx:04d}',
-                    'input_sequence': sequence,
-                    'active_volume': active_volume,
-                    'hexagons': hexagons
-                })
-                if (row_idx + 1) % 50 == 0:
-                    print(f"Processed {row_idx + 1} sequences...")
             except Exception as e:
+                n_errors += 1
                 print(f"Error processing sequence {row_idx}: {e}")
                 print(f"  Sequence: {sequence}")
                 import traceback
                 traceback.print_exc()
                 continue
-    
 
-    print(f"\nSaving {len(all_sequences_data)} sequences to logical_blocks_fermi_hubbard_2d_step_s4_universal_paulis_commuted.json...")
-    save_sequences_to_json(all_sequences_data, filename='logical_blocks_fermi_hubbard_2d_step_s4_universal_paulis_commuted.json')
-    print(f"Done! Total sequences processed: {len(all_sequences_data)}")
+            entry = {
+                'sequence_id': f'seq_{row_idx:04d}',
+                'input_sequence': sequence,
+                'active_volume': active_volume,
+                'hexagons': hexagons,
+            }
+            fout.write(json.dumps(entry, separators=(',', ':')) + '\n')
+            n_written += 1
+
+            if n_written % 5000 == 0:
+                print(f"  Written {n_written} sequences...")
+
+    print(f"\nDone! Wrote {n_written} sequences to {out_file} ({n_errors} errors).")

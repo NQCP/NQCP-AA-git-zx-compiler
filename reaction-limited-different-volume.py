@@ -9,6 +9,7 @@ Minimum percentage = (max sequence cost over all sequences) / 86 * 100,
 where sequence cost = active_volume + T_state_overhead.
 """
 
+import gzip
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,10 +27,12 @@ LOGICAL_BLOCKS_FILE = "logical_blocks.json"
 
 
 def load_sequences(filename=LOGICAL_BLOCKS_FILE):
-    """Load sequences from JSON file."""
+    """Load sequences from a JSON file, or a gzipped JSON-Lines file (.jsonl.gz)."""
+    if filename.endswith('.gz'):
+        with gzip.open(filename, 'rt') as f:
+            return [json.loads(line) for line in f if line.strip()]
     with open(filename) as f:
-        sequences = json.load(f)
-    return sequences
+        return json.load(f)
 
 
 def calculate_sequence_cost(sequence):

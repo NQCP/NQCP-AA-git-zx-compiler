@@ -2,6 +2,7 @@
 Compute AV before and after replacing repeating Pauli segments with cheap gadgets.
 """
 
+import gzip
 import importlib.util
 import json
 import sys
@@ -15,15 +16,14 @@ find_maximal_commuting_segments = ppr_opt.find_maximal_commuting_segments
 
 
 def load_av_by_index(json_path: str) -> dict:
-    """Load logical_blocks.json and return {index: active_volume}."""
+    """Load logical_blocks.json (or .jsonl.gz) and return {index: active_volume}."""
+    if json_path.endswith('.gz'):
+        with gzip.open(json_path, 'rt') as f:
+            entries = (json.loads(line) for line in f if line.strip())
+            return {int(e["sequence_id"].split("_")[1]): e["active_volume"] for e in entries}
     with open(json_path) as f:
         data = json.load(f)
-    av = {}
-    for entry in data:
-        sid = entry["sequence_id"]
-        idx = int(sid.split("_")[1])
-        av[idx] = entry["active_volume"]
-    return av
+    return {int(e["sequence_id"].split("_")[1]): e["active_volume"] for e in data}
 
 
 def bases_to_key(bases) -> str:
