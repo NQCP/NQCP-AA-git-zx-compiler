@@ -15,7 +15,7 @@ Produces `runtime_vs_qubits_tmm_stat_qpe_gap_neutral_atoms_0.001.pdf`.
 ## Contents
 
 - `plot_neutral_atoms.py` — computes the three curves from the data files and plots them.
-- `data/bell_pairs_sweep_transversal_transversal-logical-blocks-tmm.npz` —
+- `data/bell-pairs-sweep-transversal-logical-blocks-tmm.npz` —
   per-(T-per-cycle) Bell-pair / cycle-count statistics from the transversal scheduler.
 - `data/distance_table.csv` — minimum sufficient code distances per benchmark.
 - `plotstylefile.mplstyle` — matplotlib style (optional; the script falls back to defaults if absent).
