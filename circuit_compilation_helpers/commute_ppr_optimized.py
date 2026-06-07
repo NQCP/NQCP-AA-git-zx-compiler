@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, List, Sequence, Tuple
 
-from logical_to_ppr.ppr_functions import write_condition
+from circuit_compilation_helpers.ppr_functions import write_condition
 
 PAULI_TO_CODE = {"i": 0, "x": 1, "y": 2, "z": 3}
 CODE_TO_PAULI = ("i", "x", "y", "z")

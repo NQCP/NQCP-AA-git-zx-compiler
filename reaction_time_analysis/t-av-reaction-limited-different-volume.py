@@ -1,185 +1,156 @@
 """
-Reaction-limited stalling contours for T-AV transversal circuit (different capacities).
+Reaction-limited stalling contours for T-AV compilation across T-count settings.
 
-Uses scheduling from bell_pairs_count_t_av.py (transversal-logical-blocks.json).
-total_logical_blocks = 100, no T state overhead (already in factory allocation).
-tau_c = code cycle time, tau_r = reaction time.
-
-Stalling = sum over cycles k of max(0, tau_r * reaction_depth_k - tau_c)
-tau_c range: 10 µs to 100 ms
-
-Contours only (no heatmap), like reaction_limited_different_volume.pdf.
+Runs a sweep over T gates allowed per code cycle for one transversal
+logical-network circuit, caches the per-cycle reaction depths, and leaves
+plotting to the notebook helper.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
+import sys
 import warnings
+from pathlib import Path
 
-# Import scheduling from bell_pairs_count_t_av
-from bell_pairs_count_t_av import (
-    load_sequences,
-    schedule_and_count_bell_pairs,
-    available_patches,
-)
-
-d = 7  # code distance
+import numpy as np
 
 warnings.filterwarnings("ignore")
 
-TOTAL_LOGICAL_BLOCKS = 250
-SEQUENCES_FILE = "transversal-logical-blocks-heisenberg.json"
+
+HERE = Path(__file__).resolve().parent
+PROJECT_ROOT = HERE.parent
+DATA_DIR = HERE / "data"
+
+sys.path.insert(0, str(PROJECT_ROOT))
+
+SEQUENCES_FILE = "transversal-logical-blocks-fermi-hubbard.json"
+T_COUNTS_PER_CYCLE = [1, 2, 3, 4, 5]
+CODE_DISTANCE = 17
 
 
-def run_for_capacity(sequences, capacity):
+from bell_pair_analysis_helpers.bell_pairs_tranversal import (  # noqa: E402
+    load_sequences,
+    schedule_and_count_bell_pairs,
+)
+
+
+def input_file_for_sequences_file(sequences_file):
+    return PROJECT_ROOT / "logical_network_files" / sequences_file
+
+
+def data_file_for_sequences_file(sequences_file):
+    return DATA_DIR / f"reaction_limited_sweep_t_av_{Path(sequences_file).stem}.npz"
+
+
+INPUT_FILE = input_file_for_sequences_file(SEQUENCES_FILE)
+DATA_FILE = data_file_for_sequences_file(SEQUENCES_FILE)
+
+
+def run_for_t_count(sequences, t_count_per_cycle):
     """
-    Compute reaction depths for a given capacity.
-    Returns dict with reaction_depths_list, n_cycles.
+    Compute reaction depths for a given T-count-per-cycle setting.
+    Returns dict with reaction_depths_list, n_cycles, total_bell_pairs_sum.
     """
-    results = schedule_and_count_bell_pairs(sequences, capacity=capacity)
-    reaction_depths_list = [r[5] for r in results]
+    results = schedule_and_count_bell_pairs(sequences, t_per_cycle=int(t_count_per_cycle))
+    reaction_depths_list = [int(r[5]) for r in results]
+    total_bell_pairs_sum = int(sum(r[1] for r in results))
     return {
         "reaction_depths_list": reaction_depths_list,
         "n_cycles": len(results),
+        "total_bell_pairs_sum": total_bell_pairs_sum,
     }
 
 
-def compute_stalling_grid(reaction_depths, tau_r, tau_c):
+def run_t_count_sweep(input_file=INPUT_FILE, t_counts=T_COUNTS_PER_CYCLE):
+    sequences = load_sequences(str(input_file))
+
+    results = []
+    for t_count in t_counts:
+        run = run_for_t_count(sequences, t_count)
+        run["t_count"] = int(t_count)
+        run["legend_label"] = f"T/cycle = {int(t_count)}"
+        results.append(run)
+    print(f"Loaded and scheduled {len(sequences):,} transversal sequences from {input_file}")
+    return results
+
+
+def compute_stalling_grid(reaction_depths, d, tau_r, tau_c):
     """
-    Stalling = sum over k of max(0, tau_r * reaction_depth_k - tau_c)
+    Return total stalling time on a tau_r x tau_c grid.
+
+    Stalling = sum_k max(0, tau_r * reaction_depth_k - d * tau_c)
     """
-    grid = np.zeros((len(tau_r), len(tau_c)))
-    for i in range(len(tau_r)):
-        for j in range(len(tau_c)):
-            stalling = sum(
-                max(0, tau_r[i] * reaction_depths[k] - tau_c[j])
-                for k in range(len(reaction_depths))
-            )
-            grid[i, j] = stalling
+    reaction_depths = np.asarray(reaction_depths, dtype=np.int32)
+    values, counts = np.unique(reaction_depths, return_counts=True)
+    grid = np.zeros((len(tau_r), len(tau_c)), dtype=float)
+    for rd, count in zip(values, counts):
+        if rd <= 0:
+            continue
+        grid += count * np.maximum(0.0, rd * tau_r[:, None] - d * tau_c[None, :])
     return grid
 
 
-def get_no_stalling_boundary(reaction_depths, tau_c):
-    """
-    No stalling when tau_r * rd_k <= tau_c for all k.
-    So tau_r <= tau_c / max(rd_k). Boundary: tau_r = tau_c / max(rd_k).
-    """
+def get_no_stalling_boundary(reaction_depths, d, tau_c):
     max_rd = max(reaction_depths) if reaction_depths else 0
-    if max_rd > 0:
-        return tau_c / max_rd
-    return np.full_like(tau_c, np.nan)
+    if max_rd == 0:
+        return np.full_like(tau_c, np.nan)
+    return d * tau_c / max_rd
+
+
+def save_sweep_data(results, output_path):
+    output_path = Path(output_path)
+    output_path.parent.mkdir(exist_ok=True)
+
+    arrays = {
+        "t_counts": np.array([int(run["t_count"]) for run in results], dtype=np.int32),
+        "n_cycles": np.array([int(run["n_cycles"]) for run in results], dtype=np.int32),
+        "total_bell_pairs_sum": np.array(
+            [int(run["total_bell_pairs_sum"]) for run in results], dtype=np.int64
+        ),
+        "code_distance": np.array([int(CODE_DISTANCE)], dtype=np.int32),
+    }
+    for run in results:
+        arrays[f"reaction_depths_{int(run['t_count'])}"] = np.array(
+            run["reaction_depths_list"], dtype=np.int16
+        )
+
+    np.savez_compressed(output_path, **arrays)
+    print(f"Saved {output_path}")
+
+
+def load_sweep_data(npz_path):
+    data = np.load(npz_path)
+    t_counts = data["t_counts"].tolist()
+    results = []
+    for idx, t_count in enumerate(t_counts):
+        results.append(
+            {
+                "t_count": int(t_count),
+                "legend_label": f"T/cycle = {int(t_count)}",
+                "reaction_depths_list": data[f"reaction_depths_{int(t_count)}"].tolist(),
+                "n_cycles": int(data["n_cycles"][idx]),
+                "total_bell_pairs_sum": int(data["total_bell_pairs_sum"][idx]),
+            }
+        )
+    code_distance = int(data["code_distance"][0])
+    return results, code_distance
 
 
 def main():
-    sequences = load_sequences(SEQUENCES_FILE)
-    print(f"Loaded {len(sequences)} sequences from {SEQUENCES_FILE}")
-    print(f"Base capacity (100%): {available_patches} patches")
+    results = run_t_count_sweep()
 
-    # Four capacities: 100%, 75%, 50%, 25% of available_patches
-    pct_100 = 250.0
-    pct_min = 170.0
-    step = (pct_100 - pct_min) / 3
-    percentages_display = [pct_100, pct_100 - step, pct_100 - 2 * step, pct_min]
-    capacities = [max(1, int(available_patches * p / 100)) for p in percentages_display]
+    for run in results:
+        rd = np.asarray(run["reaction_depths_list"])
+        active = rd[rd > 0]
+        print(f"\n--- T/cycle = {run['t_count']} ---")
+        print(f"  Logical cycles: {run['n_cycles']:,}")
+        print(f"  Total bell pairs (all cycles): {run['total_bell_pairs_sum']:,}")
+        if active.size:
+            print(
+                "  Reaction depth: "
+                f"min={active.min()}, max={active.max()}, avg={active.mean():.2f}"
+            )
 
-    results = []
-    for pct, cap in zip(percentages_display, capacities):
-        r = run_for_capacity(sequences, float(cap))
-        r["pct"] = pct
-        r["capacity"] = cap
-        results.append(r)
-        rd_list = r["reaction_depths_list"]
-        active = [x for x in rd_list if x > 0]
-        print(f"\n--- {pct:.1f}% capacity ({cap} patches) ---")
-        print(f"  Code cycles: {r['n_cycles']}")
-        if active:
-            print(f"  Reaction depth: min={min(active)}, max={max(active)}, avg={np.mean(active):.1f}")
-
-    # tau_c: 10 µs to 100 ms
-    tau_c = np.logspace(1, 5, 100)  # 10 to 100000 µs
-    # tau_r: cover no-stalling boundary range
-    tau_r = np.logspace(-1, 4, 100)  # 0.1 to 10000 µs
-    tau_c_line = np.logspace(np.log10(tau_c.min()), np.log10(tau_c.max()), 200)
-
-    try:
-        plt.style.use("plotstylefile.mplstyle")
-    except OSError:
-        pass
-
-    colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3"]
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    X, Y = np.meshgrid(tau_c, tau_r)
-
-    for idx, r in enumerate(results):
-        stalling_grid = compute_stalling_grid(r["reaction_depths_list"], tau_r, tau_c)
-        tau_r_boundary = get_no_stalling_boundary(r["reaction_depths_list"], tau_c_line)
-        mask = (tau_r_boundary >= tau_r.min()) & (tau_r_boundary <= tau_r.max())
-
-        # Shade no-stalling region (below boundary) with transparent color
-        y_top = np.clip(tau_r_boundary, tau_r.min(), tau_r.max())
-        ax.fill_between(
-            tau_c_line, tau_r.min(), y_top,
-            alpha=0.25, color=colors[idx], zorder=0,
-        )
-
-        # Contour at 10^4 (dotted) and 10^5 (dashed)
-        ax.contour(
-            X, Y, stalling_grid,
-            levels=[1e4],
-            colors=[colors[idx]],
-            linewidths=2,
-            linestyles=":",
-            alpha=0.9,
-            zorder=2,
-        )
-        ax.contour(
-            X, Y, stalling_grid,
-            levels=[1e5],
-            colors=[colors[idx]],
-            linewidths=2,
-            linestyles="--",
-            alpha=0.9,
-            zorder=2,
-        )
-        # No stalling boundary
-        ax.plot(
-            tau_c_line[mask], tau_r_boundary[mask],
-            color=colors[idx], linewidth=2.5, linestyle="-",
-            zorder=3,
-        )
-
-    ax.set_xlabel(r"$\tau_c$ (µs)")
-    ax.set_ylabel(r"$\tau_r$ (µs)")
-    ax.set_xlim(tau_c.min(), tau_c.max())
-    ax.set_ylim(tau_r.min(), tau_r.max())
-
-    # Two legends: linestyle for stalling, then capacity/cycles as color
-    stalling_104 = Line2D([0], [0], color="gray", linestyle=":", linewidth=2, label=r"Stalling time = $10^4$ µs")
-    stalling_105 = Line2D([0], [0], color="gray", linestyle="--", linewidth=2, label=r"Stalling time = $10^5$ µs")
-    no_stalling = Line2D([0], [0], color="gray", linestyle="-", linewidth=2.5, label="No stalling boundary")
-    vol_handles = [
-        Patch(facecolor=colors[idx], alpha=0.25, edgecolor=colors[idx], label=f"{r['pct']:.0f}% cap, {r['n_cycles']/d:.0f} cycles")
-        for idx, r in enumerate(results)
-    ]
-    leg1 = ax.legend(
-        handles=[stalling_104, stalling_105, no_stalling],
-        labels=[r"Stalling time = $10^4$ µs", r"Stalling time = $10^5$ µs", "No stalling boundary"],
-        loc="upper center", bbox_to_anchor=(0.25, -0.16), frameon=True, ncol=1,
-    )
-    ax.add_artist(leg1)
-    ax.legend(
-        handles=vol_handles,
-        labels=[f"{r['pct']:.0f}% cap, {r['n_cycles']/d:.0f} cycles" for r in results],
-        loc="upper center", bbox_to_anchor=(0.75, -0.16), frameon=True, ncol=1,
-    )
-
-    plt.tight_layout(rect=[0, 0.12, 1, 1])
-    plt.savefig("t_av_reaction_limited_different_volume_heisenberg.pdf", bbox_inches="tight", pad_inches=0.1)
-    print("\nSaved t_av_reaction_limited_different_volume_heisenberg.pdf")
+    save_sweep_data(results, DATA_FILE)
+    print(f"\nSaved sweep data only: {DATA_FILE}")
 
 
 if __name__ == "__main__":

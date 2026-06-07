@@ -1,10 +1,11 @@
 import gzip
 import json
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
 from collections import deque
+from pathlib import Path
+
+TWO_COLUMN_STYLE_FILE = Path(__file__).resolve().parent.parent / "plotstylefile_two_column.mplstyle"
 
 # 35 full logical blocks produce 2 msd per cycle 
 # Constants
@@ -126,55 +127,51 @@ def _rolling_stats(arr, window):
 
 def plot_parallel_operations(schedule, output_file=f'{output_dir}/ppr_parallelization_{circuit}.pdf'):
     """Rolling-window summary plot: mean + percentile bands across logical cycles."""
-    try:
-        plt.style.use('plotstylefile.mplstyle')
-    except OSError:
-        pass
-
     parallel_ops = np.asarray([s[1] for s in schedule])
     used_blocks = np.asarray([s[2] for s in schedule])
     n_cycles = len(schedule)
     # Aim for ~500 windows; at least 1 cycle per window
     window = max(1, n_cycles // 500)
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
+    with plt.style.context(str(TWO_COLUMN_STYLE_FILE)):
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
 
-    # Panel 1: parallel PPRs per cycle
-    x, mean, p05, p25, p75, p95 = _rolling_stats(parallel_ops, window)
-    ax1.fill_between(x, p05, p95, alpha=0.20, color='steelblue', label='5-95th %ile')
-    ax1.fill_between(x, p25, p75, alpha=0.40, color='steelblue', label='25-75th %ile')
-    ax1.plot(x, mean, color='navy', lw=1.5, label='rolling mean')
-    ax1.set_ylabel('PPRs per cycle')
-    ax1.set_ylim(bottom=0)
-    ax1.legend(loc='upper left')
+        # Panel 1: parallel PPRs per cycle
+        x, mean, p05, p25, p75, p95 = _rolling_stats(parallel_ops, window)
+        ax1.fill_between(x, p05, p95, alpha=0.20, color='steelblue', label='5-95th %ile')
+        ax1.fill_between(x, p25, p75, alpha=0.40, color='steelblue', label='25-75th %ile')
+        ax1.plot(x, mean, color='navy', lw=1.5, label='rolling mean')
+        ax1.set_ylabel('PPRs per cycle')
+        ax1.set_ylim(bottom=0)
+        ax1.legend(loc='upper left')
 
-    textstr = (
-        f'Cycles: {n_cycles:,}\n'
-        f'Window: {window} cycles\n'
-        f'Mean PPRs/cycle: {parallel_ops.mean():.2f}\n'
-        f'Max PPRs/cycle: {parallel_ops.max()}'
-    )
-    ax1.text(0.98, 0.98, textstr, transform=ax1.transAxes,
-             verticalalignment='top', horizontalalignment='right',
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.85))
+        textstr = (
+            f'Cycles: {n_cycles:,}\n'
+            f'Window: {window} cycles\n'
+            f'Mean PPRs/cycle: {parallel_ops.mean():.2f}\n'
+            f'Max PPRs/cycle: {parallel_ops.max()}'
+        )
+        ax1.text(0.98, 0.98, textstr, transform=ax1.transAxes,
+                 verticalalignment='top', horizontalalignment='right',
+                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.85))
 
-    # Panel 2: workspace utilization
-    util = used_blocks / TOTAL_LOGICAL_BLOCKS
-    x, mean, p05, p25, p75, p95 = _rolling_stats(util, window)
-    ax2.fill_between(x, p05, p95, alpha=0.20, color='seagreen')
-    ax2.fill_between(x, p25, p75, alpha=0.40, color='seagreen')
-    ax2.plot(x, mean, color='darkgreen', lw=1.5)
-    ax2.axhline(y=1.0, color='r', linestyle='--', alpha=0.6, label='capacity')
-    ax2.set_xlabel('Logical cycle')
-    ax2.set_ylabel('Workspace utilization')
-    ax2.set_xlim(0, n_cycles)
-    ax2.set_ylim(0, 1.1)
-    ax2.legend(loc='upper right')
+        # Panel 2: workspace utilization
+        util = used_blocks / TOTAL_LOGICAL_BLOCKS
+        x, mean, p05, p25, p75, p95 = _rolling_stats(util, window)
+        ax2.fill_between(x, p05, p95, alpha=0.20, color='seagreen')
+        ax2.fill_between(x, p25, p75, alpha=0.40, color='seagreen')
+        ax2.plot(x, mean, color='darkgreen', lw=1.5)
+        ax2.axhline(y=1.0, color='r', linestyle='--', alpha=0.6, label='capacity')
+        ax2.set_xlabel('Logical cycle')
+        ax2.set_ylabel('Workspace utilization')
+        ax2.set_xlim(0, n_cycles)
+        ax2.set_ylim(0, 1.1)
+        ax2.legend(loc='upper right')
 
-    plt.tight_layout()
-    plt.savefig(output_file, bbox_inches='tight', pad_inches=0.1)
-    print(f"\nPlot saved to {output_file}")
-    plt.close('all')
+        plt.tight_layout()
+        plt.savefig(output_file, bbox_inches='tight', pad_inches=0.1)
+        print(f"\nPlot saved to {output_file}")
+        plt.close('all')
 
     return fig
 

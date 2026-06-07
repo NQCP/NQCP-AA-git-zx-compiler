@@ -1,0 +1,42 @@
+figure.facecolor: white
+figure.edgecolor: black
+
+font.size: 18.0
+
+axes.facecolor: white
+axes.edgecolor: black
+axes.linewidth: 0.9
+axes.grid: True
+axes.labelsize: 18.0
+axes.titlesize: 18.0
+axes.labelcolor: black
+axes.titlepad: 6.0
+
+xtick.labelsize: 16.0
+xtick.color: black
+xtick.direction: in
+xtick.major.size: 4.5
+xtick.major.width: 0.9
+
+ytick.labelsize: 16.0
+ytick.color: black
+ytick.direction: in
+ytick.major.size: 4.5
+ytick.major.width: 0.9
+
+grid.color: black
+grid.alpha: 0.3
+grid.linestyle: -
+grid.linewidth: 0.8
+
+lines.linewidth: 2.2
+lines.markersize: 9
+
+legend.fontsize: 17.0
+legend.title_fontsize: 17.0
+legend.frameon: True
+legend.framealpha: 0.9
+legend.borderpad: 0.55
+legend.labelspacing: 0.5
+legend.handlelength: 2.1
+legend.handletextpad: 0.7

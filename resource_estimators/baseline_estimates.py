@@ -50,7 +50,7 @@ def baseline_estimator(ppr_file):
 
 
     # determining code distance:  total_tiles * total_clock_cycles * d * logical_error_rate_pr_lq_pr_code_cycle(physical_error_rate, distance) < 0.01
-    physical_error_rate_list = [ 10**(-3), 10**(-4), 10**(-5), 10**(-6), 10**(-7), 10**(-8), 10**(-9), 10**(-10)]
+    physical_error_rate_list = [ 10**(-3), 10**(-4)]
     for physical_error_rate in physical_error_rate_list:
         if msd_error_rate_required() < magic_state_error_rate_15to1(physical_error_rate):
             break
@@ -58,7 +58,7 @@ def baseline_estimator(ppr_file):
     distance_list = []
     distance_list_compact = []
     for physical_error_rate in physical_error_rate_list:
-        for distance in range(1, 50):
+        for distance in range(1, 30):
             if total_tiles * total_clock_cycles * distance * logical_error_rate_pr_lq_pr_code_cycle(physical_error_rate, distance) < error_prob:
                 distance_list.append(distance)
                 
@@ -67,7 +67,7 @@ def baseline_estimator(ppr_file):
                 print(f"Distance {distance} is not sufficient for physical error rate {physical_error_rate}")
 
     for physical_error_rate in physical_error_rate_list:
-        for distance in range(1, 50):            
+        for distance in range(1, 30):            
             if total_tiles_compact * total_clock_cycles_compact * distance * logical_error_rate_pr_lq_pr_code_cycle(physical_error_rate, distance) < error_prob:
                 distance_list_compact.append(distance)
                 break

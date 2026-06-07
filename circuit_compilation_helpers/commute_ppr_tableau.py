@@ -17,8 +17,8 @@ None of the universal QASM inputs in this repo exercise either branch.
 from __future__ import annotations
 from typing import Dict, List, Sequence, Tuple
 
-from logical_to_ppr.ppr_functions import write_condition
-from logical_to_ppr.commute_ppr_optimized import (
+from circuit_compilation_helpers.ppr_functions import write_condition
+from circuit_compilation_helpers.commute_ppr_optimized import (
     parse_paulis_file,
     CODE_TO_PAULI,
 )

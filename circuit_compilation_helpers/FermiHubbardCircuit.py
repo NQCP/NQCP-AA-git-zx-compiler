@@ -31,6 +31,7 @@ from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.synthesis import SuzukiTrotter
 
+
 PauliTerm = Tuple[str, List[int], float]
 
 ROWS = 10
@@ -39,7 +40,7 @@ N_SITES = ROWS * COLS
 NUM_QUBITS = 2 * N_SITES
 
 T_HOPPING = 1.0
-U_ONSITE = 1.0
+U_ONSITE = 8.0
 
 TOTAL_EVOLUTION_TIME = 1.0
 TROTTER_STEPS = 1
@@ -122,11 +123,12 @@ def build_hubbard_hamiltonian(
         for c in range(cols):
             p_up = site_qubit(r, c, 0, rows, cols)
             p_dn = site_qubit(r, c, 1, rows, cols)
-            terms.append(("Z", [p_up], -u / 4.0))
-            terms.append(("Z", [p_dn], -u / 4.0))
-            terms.append(("ZZ", [p_up, p_dn], u / 4.0))
+            # terms.append(("Z", [p_up], -u / 4.0))
+            # terms.append(("Z", [p_dn], -u / 4.0))
+            terms.append(("ZZ", [p_up, p_dn], u / 4.0 ))
 
     return SparsePauliOp.from_sparse_list(terms, num_qubits=n_qubits)
+
 
 
 def build_fermihubbard_trotter_step(
@@ -144,7 +146,10 @@ def build_fermihubbard_trotter_step(
     n_qubits = 2 * rows * cols
 
     synthesis = SuzukiTrotter(order=order, reps=reps)
+    
     evo_gate = PauliEvolutionGate(hamiltonian, time=tau, synthesis=synthesis)
+    # print(synthesis.expand(evo_gate))
+    
 
     circuit = QuantumCircuit(n_qubits, name="fermi_hubbard_2d_step_s{0}".format(order))
     circuit.append(evo_gate, range(n_qubits))
@@ -187,6 +192,7 @@ if __name__ == "__main__":
     print("Basis gates:", list(DEFAULT_BASIS_GATES))
     print("Basis gate counts:", basis_gate_counts)
     print("Total basis gates:", total_basis_gates)
+    # print(build_hubbard_hamiltonian())
 
     from qiskit.qasm2 import dumps
 
