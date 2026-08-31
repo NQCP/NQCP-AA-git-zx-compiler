@@ -15,7 +15,7 @@ IGNORE_GATES = {'x', 'y', 'z'}
 # Active volume per gate type (T_AV can be changed)
 if distillation:
     d = 17 # heisenberg is 15
-    time_to_distill = 132.5/d
+    time_to_distill = 133.5/d  # active t-AV of transversal 15-to-1 per T (dirty-state init free, bus folded into injection)
     time_to_inject = 3.5/d  
     ACTIVE_VOLUME = {'s': 1/d, 
                      't': time_to_distill + time_to_inject, 
@@ -25,7 +25,7 @@ if distillation:
 
 # cultivation assumptions:
 if cultivation:
-    time_to_cultivate = 14.3/d # code cycles
+    time_to_cultivate = 12/d # code cycles (rounds per attempt; App. fold-transversal f=5 stage count)
     time_to_inject = 3.5/d # code cyles 
     qubits_per_factory = 787
     ACTIVE_VOLUME = {'s': 1/d, 

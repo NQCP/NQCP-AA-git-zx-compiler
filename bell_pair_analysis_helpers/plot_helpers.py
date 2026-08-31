@@ -12,6 +12,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import matplotlib.transforms as mtransforms
 import numpy as np
 from matplotlib.lines import Line2D
 
@@ -240,7 +241,7 @@ def _transversal_scaling_arrays(runs):
 # Factory production rates (code cycles per produced T state, per factory).
 # Sourced from resource_estimators/qubits_runtime_estimates*.py.
 TAV_VARIANT_PERIODS = {
-    "Trans-MSD": 8.0,  # T_STATE_FACTORY_PERIOD
+    "Trans-MSD": 9.0,  # T_STATE_FACTORY_PERIOD
 }
 TAV_VARIANT_COLORS = {
     "Trans-MSD": "#0072B2",
@@ -343,6 +344,23 @@ def plot_transversal_scaling_panels(circuits=TRANSVERSAL_SCALING_CIRCUITS, figsi
         ax = axes[0, col]
         ax2 = ax.twinx()
 
+        # Magic-limited zone: below n_fac = period the T supply is < 1 per
+        # cycle, so production (not consumption) bottlenecks the runtime.
+        # Shade it gray and mark the boundary at n_fac = period (= 9 for
+        # trans-dist, where supply reaches 1 T per code cycle).
+        boundary = max(TAV_VARIANT_PERIODS[v] for v in per_variant)
+        ax.axvspan(1, boundary, color="0.55", alpha=0.18, linewidth=0, zorder=0)
+        ax.axvline(boundary, color="0.45", linestyle=":", lw=1.0, zorder=1)
+        label_transform = mtransforms.blended_transform_factory(
+            ax.transData, ax.transAxes
+        )
+        ax.text(np.sqrt(1 * boundary), 0.965, "Magic limited",
+                transform=label_transform, ha="center", va="top",
+                fontsize=11, color="0.30", zorder=1)
+        ax.text(np.sqrt(boundary * n_max_global), 0.965, "Compute limited",
+                transform=label_transform, ha="center", va="top",
+                fontsize=11, color="0.30", zorder=1)
+
         for variant_label, (ns, bridges, bridges_lower, bridges_upper, speedups) in per_variant.items():
             color = TAV_VARIANT_COLORS[variant_label]
             ax.fill_between(ns, bridges_lower, bridges_upper,
@@ -395,7 +413,7 @@ def main():
 
         fig_tmm = plot_transversal_scaling_panels(
             circuits={"TMM": TRANSVERSAL_SCALING_CIRCUITS["TMM"]},
-            figsize=(5.0, 3.5),
+            figsize=(7.0, 4.9),
         )
         save_for_paper(fig_tmm, "bell_pair_scaling_vs_factory_tmm.pdf")
         plt.close(fig_tmm)

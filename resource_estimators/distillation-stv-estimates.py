@@ -7,21 +7,29 @@ distilled T state, in physical qubit * code-cycle units. A logical patch is
 2 d^2 physical qubits (rotated surface code, incl. measurement ancillas) and one
 logical cycle is d code cycles, so one logical block = 2 d^3.
 
+All schemes use the active-volume convention: a patch is charged only for the
+cycles in which it participates in an operation, not for merely being alive.
+
 Scheme models (physical qubit * code-cycle per T state):
-  trans-dist  : transversal 15-to-1. Active t-AV = 132.5/d blocks per T
-                -> 132.5/d * 2 d^3 = 265 d^2. The buffer bus (15 tiles used for
-                3 of the 8 code cycles) adds 15 * 3 * 2 d^2 = 90 d^2, giving
-                355 d^2 with the bus included.
+  trans-dist  : transversal 15-to-1. Active t-AV per T state, counting only
+                participating patches, with the dirty-state init free (no
+                syndrome extraction, prepared in parallel) and the buffer bus
+                folded into the injection term:
+                  init 16/d + encode 50/d + inject 52.5/d + measure 15/d
+                  = 133.5/d,
+                where inject = 15*3.5 (teleportation) = 52.5/d
+                -> 133.5/d * 2 d^3 = 267 d^2.
   LS-dist     : concatenated (15-to-1) x (8-to-CCZ) lattice-surgery factory
                 (Litinski AV): 35 blocks per CCZ + 16.5 blocks for the
                 CCZ -> 2T conversion = 25.75 blocks per T state
                 -> 25.75 * 2 d^3 = 51.5 d^3.
-  parity-dist : parity-ancilla factory, 7 tiles, 1 T per 71 code cycles, no bus
-                -> 7 * 2 d^2 * 71 = 994 d^2.
+  parity-dist : parity-ancilla factory, 7 tiles, 1 T per 59 code cycles
+                throughput; active t-AV (participating patches only) = 108.5/d
+                -> 108.5/d * 2 d^3 = 217 d^2.
   cultivation : 562 + d_eff^2 physical qubits with d_eff = min(d, 11) (the
                 cultivation patch distance saturates at 11), 1 T per
-                14.3*5 = 71.5 code cycles -> rises as (562 + d^2) * 71.5 up to
-                d = 11, then flat at 683 * 71.5 = 4.88e4.
+                12*5 = 60 code cycles -> rises as (562 + d^2) * 60 up to
+                d = 11, then flat at 683 * 60 = 4.10e4.
 
 Run from the project root:
     python resource_estimators/distillation-stv-estimates.py
@@ -36,21 +44,25 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 TWO_COLUMN_STYLE_FILE = PROJECT_ROOT / "plotstylefile_two_column.mplstyle"
 
 # --- factory constants (mirrors qubits_runtime_estimates.py) ---
-TAV_15TO1_BLOCKS = 132.5            # active t-AV of transversal 15-to-1, per T
-TRANS_BUFFER_TILES = 15             # buffer-bus register size (tiles)
-TRANS_BUFFER_CYCLES = 3             # code cycles a factory holds the bus per T
+# Active t-AV of transversal 15-to-1 per T state (participating patches only):
+#   init 16/d + encode 50/d + inject 52.5/d + measure 15/d = 133.5/d.
+# Dirty-state init is free (no syndrome extraction, prepared in parallel); the
+# injection term (52.5/d = 15*3.5 teleportation) folds in the buffer bus.
+TAV_15TO1_ACTIVE = 16 + 50 + 52.5 + 15   # = 133.5
 
 # Concatenated (15-to-1) x (8-to-CCZ) lattice-surgery factory (Litinski AV):
 # 35 active-volume blocks per CCZ state + 16.5 blocks for the CCZ -> 2T
 # conversion, i.e. (35 + 16.5)/2 = 25.75 blocks per T state.
 LS_BLOCKS_PER_T = (35 + 16.5) / 2
 
-PARITY_TILES = 7
-PARITY_CYCLES_PER_T = 71
+# Parity-ancilla factory: 7 tiles, 1 T per 59 code cycles throughput, but only
+# ~2 patches active per cycle, so the active t-AV per T is well below the
+# all-alive 7*59 = 413/d. Active value used in the paper:
+PARITY_ACTIVE_TAV = 108.5   # -> 217 d^2
 
 CULTIVATION_QUBIT_BASE = 562        # footprint = 562 + d_eff^2 physical qubits
 CULTIVATION_MAX_DISTANCE = 11       # patch distance saturates: d_eff = min(d, 11)
-CULTIVATION_CYCLES_PER_T = 14.3 * 5  # = 71.5 code cycles per state
+CULTIVATION_CYCLES_PER_T = 12 * 5  # = 60 code cycles per state (12 cycles/attempt x 5 attempts, p=1e-3)
 
 PATCH_QUBITS = lambda d: 2 * d ** 2  # physical qubits per logical patch
 
@@ -59,15 +71,9 @@ BENCHMARK_DISTANCES = [7, 9, 11, 13, 15, 17, 19]
 
 
 # --- space-time volume per T state (physical qubit * code-cycle) ---
-def stv_trans_core(d):
-    """Transversal 15-to-1, active volume only (132.5/d blocks -> 265 d^2)."""
-    return (TAV_15TO1_BLOCKS / d) * 2 * d ** 3
-
-
-def stv_trans_buffer(d):
-    """Transversal 15-to-1 including the buffer bus (265 d^2 + 90 d^2)."""
-    buffer = TRANS_BUFFER_TILES * TRANS_BUFFER_CYCLES * PATCH_QUBITS(d)
-    return stv_trans_core(d) + buffer
+def stv_trans(d):
+    """Transversal 15-to-1, active t-AV 133.5/d -> 267 d^2 (bus folded in)."""
+    return (TAV_15TO1_ACTIVE / d) * 2 * np.asarray(d, dtype=float) ** 3
 
 
 def stv_ls(d):
@@ -76,19 +82,19 @@ def stv_ls(d):
 
 
 def stv_parity(d):
-    """Parity-ancilla factory: 7 tiles, 71 code cycles per T (994 d^2)."""
-    return PARITY_TILES * PATCH_QUBITS(d) * PARITY_CYCLES_PER_T
+    """Parity-ancilla factory: active t-AV 108.5/d -> 217 d^2."""
+    return (PARITY_ACTIVE_TAV / d) * 2 * np.asarray(d, dtype=float) ** 3
 
 
 def stv_cultivation(d):
-    """Cultivation: 562 + d_eff^2 qubits (d_eff = min(d, 11)), 71.5 code cycles/T."""
+    """Cultivation: 562 + d_eff^2 qubits (d_eff = min(d, 11)), 60 code cycles/T."""
     d_eff = np.minimum(np.asarray(d, dtype=float), CULTIVATION_MAX_DISTANCE)
     qubits = CULTIVATION_QUBIT_BASE + d_eff ** 2
     return qubits * CULTIVATION_CYCLES_PER_T
 
 
 CURVES = [
-    ("trans-dist", stv_trans_buffer, "-", "#0072B2"),
+    ("trans-dist", stv_trans, "-", "#0072B2"),
     ("LS-dist", stv_ls, "-", "#D55E00"),
     ("parity-dist", stv_parity, "-", "#009E73"),
     ("cultivation", stv_cultivation, "-", "#CC79A7"),
@@ -106,9 +112,8 @@ def crossover(f, g, lo=3.0, hi=60.0):
 def print_crossovers():
     print("Crossover distances (space-time volume per T state):")
     pairs = [
-        ("trans-dist (core)", stv_trans_core, "LS-dist", stv_ls),
-        ("trans-dist (+buffer)", stv_trans_buffer, "LS-dist", stv_ls),
-        ("cultivation", stv_cultivation, "trans-dist (+buffer)", stv_trans_buffer),
+        ("trans-dist", stv_trans, "LS-dist", stv_ls),
+        ("cultivation", stv_cultivation, "trans-dist", stv_trans),
         ("cultivation", stv_cultivation, "LS-dist", stv_ls),
         ("cultivation", stv_cultivation, "parity-dist", stv_parity),
     ]

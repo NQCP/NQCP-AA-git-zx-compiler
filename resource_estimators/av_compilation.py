@@ -7,15 +7,30 @@ rotate_sequence = ['z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'y']
 # Distillation active volume per T state: concatenated (15-to-1) x (8-to-CCZ)
 # LS factory (Litinski AV), 35 blocks per CCZ + 16.5 blocks CCZ->2T conversion
 # = 25.75 blocks per T state. These blocks live at the factory distance d_fac
-# (App. tab:lsdist-configs), not the algorithm distance.
+# (App. tab:lsdist-configs), not the algorithm distance. Used for the benchmarks
+# that need two-level distillation: FH / QPE-Abs at p = 1e-3.
 C_T = 25.75
+
+# Single-stage (15-to-1) factory: 35 blocks per 2-T factory = 17.5 blocks per T
+# state, run in-fabric at the algorithm distance d (not d_fac). A single stage
+# suffices wherever the T-error budget allows it: Stat-QPE / Stat-QPE-gap at both
+# rates, and FH / QPE-Abs at p = 1e-4 (single-stage 35 p^3 covers n_T up to ~1e9).
+C_T_SINGLE_STAGE = 17.5
 
 # Distance-independent transversal-active-volume block counts per gate.
 # A single-qubit Clifford occupies 1 patch for 1 code cycle; a transversal CX
-# occupies 2 patches; a T gate carries the 15-to-1 distillation (132.5) plus
+# occupies 2 patches; a T gate carries the 15-to-1 distillation (133.5, active
+# t-AV with dirty-state init free and buffer bus folded into injection) plus
 # injection (3.5) block budget. Dividing the summed blocks by the code distance
-# d recovers the per-gate t-AV costs used in the paper (1/d, 2/d, 136/d).
-TAV_BLOCKS = {"s": 1, "sdg": 1, "h": 1, "cx": 2, "t": 136}
+# d recovers the per-gate t-AV costs used in the paper (1/d, 2/d, 137/d).
+TAV_BLOCKS = {"s": 1, "sdg": 1, "h": 1, "cx": 2, "t": 137}
+
+# 0-dist + trans-dist: zero-level distillation performed on the buffer-bus
+# qubits via code conversion adds 15 patches x 13 code cycles = 195 blocks per
+# T state (App. 0-dist+trans-dist: 133.5 + 195 = 328.5, +3.5 injection = 332).
+# Charged for photonics (circuit noise model) at p = 1e-3 on the benchmarks
+# whose T-error budget single-stage 15-to-1 cannot meet (FH, QPE-Abs).
+ZERO_DIST_EXTRA_T_BLOCKS = 195
 
 _GATE_RE = re.compile(r'"gate":\s*"([a-z]+)"')
 
@@ -36,6 +51,23 @@ def total_tav_blocks(json_file_path):
             if match:
                 total += TAV_BLOCKS.get(match.group(1), 0)
     return total
+
+
+def total_tav_blocks_and_t_count(json_file_path):
+    """Single-pass variant of total_tav_blocks that also returns the T-gate
+    count, so callers can add per-T overheads (e.g. ZERO_DIST_EXTRA_T_BLOCKS)
+    without streaming the multi-hundred-MB JSON a second time."""
+    total = 0
+    t_count = 0
+    with open(json_file_path) as file:
+        for line in file:
+            match = _GATE_RE.search(line)
+            if match:
+                gate = match.group(1)
+                total += TAV_BLOCKS.get(gate, 0)
+                if gate == "t":
+                    t_count += 1
+    return total, t_count
 
 def active_volume_ppr(rotate_sequence):
     z_count = 0

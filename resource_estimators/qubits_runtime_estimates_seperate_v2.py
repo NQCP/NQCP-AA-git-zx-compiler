@@ -1,69 +1,52 @@
-"""Separate runtime-vs-qubits figures: TMM (3 panels) and Fermi–Hubbard (1 panel)."""
+"""Runtime-vs-qubits paper figures (v2): TMM Stat-QPE-gap and
+Fermi-Hubbard two-rate panels only. Pruned copy of
+qubits_runtime_estimates_seperate.py importing the v2 core."""
 
 import colorsys
+
 import math
+
 from pathlib import Path
 
 import matplotlib.colors as mcolors
+
 import matplotlib.pyplot as plt
+
 import numpy as np
+
 from matplotlib.lines import Line2D
+
 from matplotlib.path import Path as MplPath
 
-import qubits_runtime_estimates as qre
-
+import qubits_runtime_estimates_v2 as qre
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-TWO_COLUMN_STYLE_FILE = PROJECT_ROOT / "plotstylefile_two_column.mplstyle"
-OUTPUT_TMM_PDF = (
-    PROJECT_ROOT / "paper_plots" / "runtime_vs_qubits_tmm_separate_0.0001.pdf"
-)
-OUTPUT_FERMI_HUBBARD_PDF = (
-    PROJECT_ROOT / "paper_plots" / "runtime_vs_qubits_fermi_hubbard_separate_0.0001.pdf"
-)
-OUTPUT_TMM_OVERLAY_PDF = (
-    PROJECT_ROOT
-    / "paper_plots"
-    / "runtime_vs_qubits_tmm_separate_overlay_0.0001_0.001.pdf"
-)
-OUTPUT_TMM_TWO_RATE_GRID_PDF = (
-    PROJECT_ROOT
-    / "paper_plots"
-    / "runtime_vs_qubits_tmm_separate_two_rate_grid_0.0001_0.001.pdf"
-)
-OUTPUT_FERMI_HUBBARD_OVERLAY_PDF = (
-    PROJECT_ROOT
-    / "paper_plots"
-    / "runtime_vs_qubits_fermi_hubbard_separate_overlay_0.0001_0.001.pdf"
-)
+
 OUTPUT_FERMI_HUBBARD_TWO_RATE_PDF = (
     PROJECT_ROOT
     / "paper_plots"
-    / "runtime_vs_qubits_fermi_hubbard_separate_two_rate_panels_0.0001_0.001.pdf"
+    / "runtime_vs_qubits_fermi_hubbard_separate_two_rate_panels_0.0001_0.001_v2.pdf"
 )
+
 OUTPUT_TMM_USE_CASE_TWO_RATE_PDFS = {
     "QPE-Abs": PROJECT_ROOT
     / "paper_plots"
-    / "runtime_vs_qubits_tmm_qpe_abs_two_rate_panels_0.0001_0.001.pdf",
+    / "runtime_vs_qubits_tmm_qpe_abs_two_rate_panels_0.0001_0.001_v2.pdf",
     "Stat-QPE": PROJECT_ROOT
     / "paper_plots"
-    / "runtime_vs_qubits_tmm_stat_qpe_two_rate_panels_0.0001_0.001.pdf",
+    / "runtime_vs_qubits_tmm_stat_qpe_two_rate_panels_0.0001_0.001_v2.pdf",
     "Stat-QPE-gap": PROJECT_ROOT
     / "paper_plots"
-    / "runtime_vs_qubits_tmm_stat_qpe_gap_two_rate_panels_0.0001_0.001.pdf",
+    / "runtime_vs_qubits_tmm_stat_qpe_gap_two_rate_panels_0.0001_0.001_v2.pdf",
 }
 
-# Blend architecture colors toward white for the looser (0.001) overlay curves.
-OVERLAY_LIGHTER_ERROR_RATE_BLEND = 0.58
-# Draw 0.001 beneath 0.0001 (larger offset keeps layering unambiguous).
-OVERLAY_ZORDER_OFFSET_LIGHTER = -80
-
-TMM_USE_CASE_LABELS = ["QPE-Abs", "Stat-QPE", "Stat-QPE-gap"]
 PLOT_MARKER_SIZE = 2.5
-FOWLER_MARKER_SIZE = 9.0
-DEFAULT_ARCHITECTURE_MARKER = "o"
-FOWLER_ARCHITECTURE_LABELS = set()
 
+FOWLER_MARKER_SIZE = 9.0
+
+DEFAULT_ARCHITECTURE_MARKER = "o"
+
+FOWLER_ARCHITECTURE_LABELS = set()
 
 def make_three_line_marker_path():
     angles = np.deg2rad([90, 210, 330])
@@ -79,27 +62,48 @@ def make_three_line_marker_path():
     vertices /= max_radius
     return MplPath(vertices, path.codes)
 
-
 THREE_LINE_MARKER = make_three_line_marker_path()
 
-NEUTRAL_ATOMS_LEGEND_LABELS = [
-    "t-AV (atoms)",
-    "t-AV (parity atoms)",
-    "cult-tAV (atoms)",
-]
-
-PHOTONICS_LEGEND_LABELS = [
-    "t-AV (Fowler)",
-    "t-AV (parity Fowler)",
-    "t-AV (LS factory)",
-    "AV",
-]
-
 FERMI_HUBBARD_SIDE_LEGEND_GROUPS = [
-    ("Neutral atoms", ["t-AV (atoms)", "t-AV (parity atoms)", "cult-tAV (atoms)"]),
+    (
+        "Neutral atoms",
+        [
+            "t-AV (atoms)",
+            "t-AV (parity atoms)",
+            "t-AV (parity atoms, no-par)",
+            "cult-tAV (atoms)",
+        ],
+    ),
     ("Superconducting", ["Compact", "Baseline"]),
-    ("Photonics", ["t-AV (Fowler)", "t-AV (parity Fowler)", "t-AV (LS factory)", "AV"]),
+    (
+        "Photonics",
+        [
+            "t-AV (Fowler)",
+            "t-AV (parity Fowler)",
+            "t-AV (parity Fowler, no-par)",
+            "t-AV (LS factory)",
+            "AV",
+        ],
+    ),
 ]
+
+# Black dashed reference curves: parity-dist factories without parallel
+# T-injection (no bridge qubits), runtime plateaus at the compute limit.
+PLOT_NO_PARALLEL = False
+
+NO_PARALLEL_ARCHITECTURE_LABELS = {
+    "t-AV (parity atoms, no-par)",
+    "t-AV (parity Fowler, no-par)",
+}
+
+if not PLOT_NO_PARALLEL:
+    FERMI_HUBBARD_SIDE_LEGEND_GROUPS = [
+        (
+            title,
+            [l for l in labels if l not in NO_PARALLEL_ARCHITECTURE_LABELS],
+        )
+        for title, labels in FERMI_HUBBARD_SIDE_LEGEND_GROUPS
+    ]
 
 # Internal architecture-key → legend display label.
 # Internal keys stay stable (so dictionaries, colors, zorder don't move);
@@ -112,8 +116,9 @@ ARCHITECTURE_DISPLAY_LABELS = {
     "t-AV (parity Fowler)": "t-AV (parity-dist)",
     "cult-tAV (atoms)": "t-AV (cult)",
     "cult-tAV (Fowler)": "t-AV (cult)",
+    "t-AV (parity atoms, no-par)": "t-AV (no parallel.)",
+    "t-AV (parity Fowler, no-par)": "t-AV (no parallel.)",
 }
-
 
 def display_label(architecture_label):
     return ARCHITECTURE_DISPLAY_LABELS.get(architecture_label, architecture_label)
@@ -125,7 +130,9 @@ PLATFORM_BAND_COLORS = {
     "Superconducting": "#117733",
     "Photonics": "#0072B2",
 }
+
 PLATFORM_BAND_LIGHTEN = 0.65
+
 PLATFORM_BAND_ALPHA = 0.28
 
 ARCHITECTURE_ZORDER = {
@@ -135,15 +142,22 @@ ARCHITECTURE_ZORDER = {
     "t-AV (LS factory)": 3.5,
     "t-AV (Fowler)": 4,
     "t-AV (parity Fowler)": 4.5,
+    "t-AV (parity Fowler, no-par)": 4.6,
     "t-AV (atoms)": 5,
     "t-AV (parity atoms)": 5.5,
+    "t-AV (parity atoms, no-par)": 5.6,
     "cult-tAV (Fowler)": 6,
     "cult-tAV (atoms)": 7,
 }
 
 T_AV_ATOMS_COLOR = "#922B21"
+
 CULT_T_AV_ATOMS_COLOR = "#E69F00"
 
+# Photonics parity-dist: a soft, slightly faint purple that sits with the
+# other t-AV shades while keeping the AV (Litinski) light blue visually
+# distinct. Atoms parity-dist keeps its red-family shade.
+PARITY_DIST_COLOR = "#6A3D9A"
 
 def with_hls(hex_color, saturation=None, lightness=None):
     red, green, blue = mcolors.to_rgb(hex_color)
@@ -157,38 +171,29 @@ def with_hls(hex_color, saturation=None, lightness=None):
     )
     return mcolors.to_hex((red, green, blue))
 
-
 ARCHITECTURE_COLOR_OVERRIDES = {
     "Baseline": "#A8E6B8",
     "Compact": "#117733",
     "t-AV (atoms)": with_hls(T_AV_ATOMS_COLOR, saturation=1.0, lightness=0.28),
     "t-AV (parity atoms)": with_hls(T_AV_ATOMS_COLOR, saturation=0.70, lightness=0.50),
     "t-AV (Fowler)": with_hls("#0072B2", saturation=1.0, lightness=0.22),
-    "t-AV (parity Fowler)": with_hls("#0072B2", saturation=0.70, lightness=0.50),
+    "t-AV (parity Fowler)": with_hls(PARITY_DIST_COLOR, saturation=0.55, lightness=0.45),
     "t-AV (LS factory)": "#0072B2",
     "AV": with_hls("#0072B2", saturation=0.85, lightness=0.60),
     "cult-tAV (atoms)": with_hls(CULT_T_AV_ATOMS_COLOR, saturation=1.0, lightness=0.36),
     "cult-tAV (Fowler)": with_hls(CULT_T_AV_ATOMS_COLOR, saturation=0.42, lightness=0.56),
+    "t-AV (parity atoms, no-par)": "black",
+    "t-AV (parity Fowler, no-par)": "black",
 }
-
 
 def apply_plot_style():
     if qre.STYLE_FILE.exists():
         plt.style.use(str(qre.STYLE_FILE))
 
-
-def apply_two_column_plot_style():
-    if TWO_COLUMN_STYLE_FILE.exists():
-        plt.style.use(str(TWO_COLUMN_STYLE_FILE))
-    else:
-        apply_plot_style()
-
-
 def architecture_color(architecture_label):
     if architecture_label in ARCHITECTURE_COLOR_OVERRIDES:
         return ARCHITECTURE_COLOR_OVERRIDES[architecture_label]
     return qre.ARCHITECTURE_STYLES[architecture_label]["color"]
-
 
 def blend_color_toward_white(hex_color, frac):
     red, green, blue = mcolors.to_rgb(hex_color)
@@ -200,24 +205,27 @@ def blend_color_toward_white(hex_color, frac):
         )
     )
 
-
 def architecture_marker(architecture_label):
     if architecture_label in FOWLER_ARCHITECTURE_LABELS:
         return THREE_LINE_MARKER
+    if architecture_label in NO_PARALLEL_ARCHITECTURE_LABELS:
+        return "None"
     return DEFAULT_ARCHITECTURE_MARKER
 
+def architecture_linestyle(architecture_label):
+    if architecture_label in NO_PARALLEL_ARCHITECTURE_LABELS:
+        return "--"
+    return "-"
 
 def plot_markersize(architecture_label):
     if architecture_label in FOWLER_ARCHITECTURE_LABELS:
         return FOWLER_MARKER_SIZE
     return PLOT_MARKER_SIZE
 
-
 def marker_plot_kwargs(architecture_label):
     if architecture_label in FOWLER_ARCHITECTURE_LABELS:
         return {"fillstyle": "none", "markeredgewidth": 1.4}
     return {}
-
 
 def architecture_legend_handle(label):
     marker = architecture_marker(label)
@@ -228,7 +236,7 @@ def architecture_legend_handle(label):
     handle_kwargs = {
         "color": line_color,
         "marker": marker,
-        "linestyle": "-",
+        "linestyle": architecture_linestyle(label),
         "linewidth": 0.9,
         "markersize": markersize,
         "label": display_label(label),
@@ -237,28 +245,6 @@ def architecture_legend_handle(label):
         handle_kwargs["fillstyle"] = "none"
         handle_kwargs["markeredgewidth"] = 1.4
     return Line2D([0], [0], **handle_kwargs)
-
-
-def error_rate_legend_handles():
-    return [
-        Line2D(
-            [0],
-            [0],
-            color=blend_color_toward_white("#000000", OVERLAY_LIGHTER_ERROR_RATE_BLEND),
-            linestyle="-",
-            linewidth=0.9,
-            label="0.001",
-        ),
-        Line2D(
-            [0],
-            [0],
-            color="black",
-            linestyle="-",
-            linewidth=0.9,
-            label="0.0001",
-        ),
-    ]
-
 
 def add_legend_panel(ax, title, handles, loc="upper left", bbox_to_anchor=None):
     ax.set_axis_off()
@@ -278,84 +264,6 @@ def add_legend_panel(ax, title, handles, loc="upper left", bbox_to_anchor=None):
         legend_kwargs["bbox_to_anchor"] = bbox_to_anchor
     legend = ax.legend(**legend_kwargs)
     legend.get_title().set_fontweight("bold")
-
-
-def add_grouped_legends(
-    fig, gs, *, legend_layout="default", include_error_rate=False, legend_row=1
-):
-    if legend_layout == "center":
-        # Equal-width legend columns spanning the full plot width.
-        ncols = 4 if include_error_rate else 3
-        gs_legends = gs[legend_row, :].subgridspec(
-            1,
-            ncols,
-            wspace=0.18,
-        )
-        legend_cols = list(range(ncols))
-        legend_styles = [{"loc": "upper center"}] * len(legend_cols)
-        # Left to right: Superconducting, Photonics, Neutral atoms
-        group_indices = [0, 1, 2]
-        for slot, group_idx in enumerate(group_indices):
-            title, arch_labels = qre.LEGEND_GROUPS[group_idx]
-            legend_ax = fig.add_subplot(gs_legends[0, legend_cols[slot]])
-            if title == "Neutral atoms":
-                arch_labels = NEUTRAL_ATOMS_LEGEND_LABELS
-            elif title == "Photonics":
-                arch_labels = PHOTONICS_LEGEND_LABELS
-            handles = [architecture_legend_handle(label) for label in arch_labels]
-            add_legend_panel(legend_ax, title, handles, **legend_styles[slot])
-        if include_error_rate:
-            legend_ax = fig.add_subplot(gs_legends[0, legend_cols[3]])
-            add_legend_panel(
-                legend_ax,
-                "Error rate",
-                error_rate_legend_handles(),
-                loc="upper center",
-            )
-    else:
-        ncols = 4 if include_error_rate else 3
-        gs_legends = gs[legend_row, :].subgridspec(
-            1,
-            ncols,
-            wspace=0.18,
-        )
-        legend_cols = list(range(ncols))
-        legend_styles = [{"loc": "upper center"}] * len(legend_cols)
-        for col, (title, arch_labels) in enumerate(qre.LEGEND_GROUPS):
-            legend_ax = fig.add_subplot(gs_legends[0, legend_cols[col]])
-            if title == "Neutral atoms":
-                arch_labels = NEUTRAL_ATOMS_LEGEND_LABELS
-            elif title == "Photonics":
-                arch_labels = PHOTONICS_LEGEND_LABELS
-            handles = [architecture_legend_handle(label) for label in arch_labels]
-            add_legend_panel(legend_ax, title, handles, **legend_styles[col])
-        if include_error_rate:
-            legend_ax = fig.add_subplot(gs_legends[0, legend_cols[3]])
-            add_legend_panel(
-                legend_ax,
-                "Error rate",
-                error_rate_legend_handles(),
-                loc="upper center",
-            )
-
-
-def tmm_data_extents(series, x_pad=1.38, y_pad_bottom=1.72, y_pad_top=2.0):
-    x_values = []
-    y_values = []
-    for item in series:
-        if item["benchmark"] != "TMM":
-            continue
-        x_values.append(np.asarray(item["x"], dtype=float))
-        y_values.append(np.asarray(item["y"], dtype=float))
-        if "special_x" in item:
-            x_values.append(np.asarray(item["special_x"], dtype=float))
-            y_values.append(np.asarray(item["special_y"], dtype=float))
-    x = np.concatenate(x_values)
-    y = np.concatenate(y_values)
-    x = x[x > 0]
-    y = y[y > 0]
-    return (x.min() / x_pad, x.max() * x_pad), (y.min() / y_pad_bottom, y.max() * y_pad_top)
-
 
 def plot_series_on_ax(
     ax,
@@ -388,7 +296,7 @@ def plot_series_on_ax(
                 item["y"],
                 color=color,
                 marker=marker,
-                linestyle="-",
+                linestyle=architecture_linestyle(arch_label),
                 linewidth=0.9,
                 markersize=plot_markersize(arch_label),
                 markevery=max(1, len(item["x"]) // 12),
@@ -411,13 +319,12 @@ def plot_series_on_ax(
                 item["y"],
                 color=color,
                 marker=marker,
-                linestyle="-",
+                linestyle=architecture_linestyle(arch_label),
                 linewidth=0.9,
                 markersize=plot_markersize(arch_label),
                 zorder=zorder,
                 **marker_kwargs,
             )
-
 
 def plot_fermi_hubbard_on_ax(
     ax,
@@ -446,7 +353,7 @@ def plot_fermi_hubbard_on_ax(
                 item["y"],
                 color=color,
                 marker=marker,
-                linestyle="-",
+                linestyle=architecture_linestyle(arch_label),
                 linewidth=0.9,
                 markersize=plot_markersize(arch_label),
                 markevery=max(1, len(item["x"]) // 12),
@@ -469,7 +376,7 @@ def plot_fermi_hubbard_on_ax(
                 item["y"],
                 color=color,
                 marker=marker,
-                linestyle="-",
+                linestyle=architecture_linestyle(arch_label),
                 linewidth=0.9,
                 markersize=plot_markersize(arch_label),
                 zorder=zorder,
@@ -500,210 +407,6 @@ def plot_fermi_hubbard_on_ax(
             zorder=5 + zorder_offset,
         )
 
-
-def plot_tmm_figure(series):
-    apply_plot_style()
-    fig = plt.figure(figsize=(12.0, 5.2))
-    gs = fig.add_gridspec(
-        2,
-        3,
-        height_ratios=[1.0, 0.36],
-        hspace=0.42,
-        wspace=0.22,
-        left=0.06,
-        right=0.99,
-        top=0.96,
-        bottom=0.07,
-    )
-    gs_plots = gs[0, :].subgridspec(1, 3, wspace=0.28)
-    xlim, ylim = tmm_data_extents(series)
-    plot_axes = [fig.add_subplot(gs_plots[0, 0])]
-    for col in range(1, 3):
-        plot_axes.append(
-            fig.add_subplot(gs_plots[0, col], sharex=plot_axes[0], sharey=plot_axes[0])
-        )
-    for col, use_case_label in enumerate(TMM_USE_CASE_LABELS):
-        ax = plot_axes[col]
-        plot_series_on_ax(ax, series, use_case_label)
-        ax.set_title(use_case_label, pad=3)
-        ax.set_xlabel("Physical qubits", labelpad=2)
-        if col == 0:
-            ax.set_ylabel("Runtime (s)", labelpad=2)
-        qre.apply_axes_style(ax)
-        ax.set_xlim(xlim)
-        ax.set_ylim(ylim)
-
-    add_grouped_legends(fig, gs)
-    return fig
-
-
-def plot_tmm_figure_overlay(series_lighter, series_primary):
-    """Overlay two distance-error-rate sweeps: lighter curves first, then primary on top."""
-    apply_plot_style()
-    combined = list(series_lighter) + list(series_primary)
-    fig = plt.figure(figsize=(12.0, 5.2))
-    gs = fig.add_gridspec(
-        2,
-        3,
-        height_ratios=[1.0, 0.36],
-        hspace=0.42,
-        wspace=0.22,
-        left=0.06,
-        right=0.99,
-        top=0.96,
-        bottom=0.07,
-    )
-    gs_plots = gs[0, :].subgridspec(1, 3, wspace=0.28)
-    xlim, ylim = tmm_data_extents(combined)
-    plot_axes = [fig.add_subplot(gs_plots[0, 0])]
-    for col in range(1, 3):
-        plot_axes.append(
-            fig.add_subplot(gs_plots[0, col], sharex=plot_axes[0], sharey=plot_axes[0])
-        )
-    lighten = lambda c: blend_color_toward_white(
-        c, OVERLAY_LIGHTER_ERROR_RATE_BLEND
-    )
-    for col, use_case_label in enumerate(TMM_USE_CASE_LABELS):
-        ax = plot_axes[col]
-        plot_series_on_ax(
-            ax,
-            series_lighter,
-            use_case_label,
-            color_transform=lighten,
-            zorder_offset=OVERLAY_ZORDER_OFFSET_LIGHTER,
-        )
-        plot_series_on_ax(ax, series_primary, use_case_label)
-        ax.set_title(use_case_label, pad=3)
-        ax.set_xlabel("Physical qubits", labelpad=2)
-        if col == 0:
-            ax.set_ylabel("Runtime (s)", labelpad=2)
-        qre.apply_axes_style(ax)
-        ax.set_xlim(xlim)
-        ax.set_ylim(ylim)
-
-    add_grouped_legends(fig, gs, include_error_rate=True)
-    return fig
-
-
-def plot_fermi_hubbard_figure(series):
-    apply_plot_style()
-    fig = plt.figure(figsize=(10.5, 5.2))
-    gs = fig.add_gridspec(
-        2,
-        3,
-        height_ratios=[1.0, 0.36],
-        hspace=0.42,
-        wspace=0.22,
-        left=0.06,
-        right=0.99,
-        top=0.96,
-        bottom=0.07,
-    )
-    gs_plot = gs[0, :].subgridspec(1, 5, width_ratios=[0.38, 1.0, 1.0, 1.0, 0.38])
-    ax = fig.add_subplot(gs_plot[0, 1:4])
-    plot_fermi_hubbard_on_ax(ax, series)
-    ax.set_title("Fermi-Hubbard", pad=3)
-    ax.set_xlabel("Physical qubits", labelpad=2)
-    ax.set_ylabel("Runtime (s)", labelpad=2)
-    qre.apply_axes_style(ax)
-
-    add_grouped_legends(fig, gs, legend_layout="center")
-    return fig
-
-
-def plot_fermi_hubbard_figure_overlay(series_lighter, series_primary):
-    apply_plot_style()
-    fig = plt.figure(figsize=(10.5, 5.2))
-    gs = fig.add_gridspec(
-        2,
-        3,
-        height_ratios=[1.0, 0.36],
-        hspace=0.42,
-        wspace=0.22,
-        left=0.06,
-        right=0.99,
-        top=0.96,
-        bottom=0.07,
-    )
-    gs_plot = gs[0, :].subgridspec(1, 5, width_ratios=[0.38, 1.0, 1.0, 1.0, 0.38])
-    ax = fig.add_subplot(gs_plot[0, 1:4])
-    lighten = lambda c: blend_color_toward_white(
-        c, OVERLAY_LIGHTER_ERROR_RATE_BLEND
-    )
-    plot_fermi_hubbard_on_ax(
-        ax,
-        series_lighter,
-        color_transform=lighten,
-        zorder_offset=OVERLAY_ZORDER_OFFSET_LIGHTER,
-        plot_ken_cult=False,
-    )
-    plot_fermi_hubbard_on_ax(ax, series_primary, plot_ken_cult=True)
-    ax.set_title("Fermi-Hubbard", pad=3)
-    ax.set_xlabel("Physical qubits", labelpad=2)
-    ax.set_ylabel("Runtime (s)", labelpad=2)
-    qre.apply_axes_style(ax)
-
-    add_grouped_legends(fig, gs, legend_layout="center", include_error_rate=True)
-    return fig
-
-
-def plot_tmm_two_rate_grid(series_lighter, series_primary):
-    apply_two_column_plot_style()
-    combined = list(series_lighter) + list(series_primary)
-    fig = plt.figure(figsize=(8.5, 5.99))
-    gs = fig.add_gridspec(
-        3,
-        3,
-        height_ratios=[1.0, 1.0, 0.36],
-        hspace=0.55,
-        wspace=0.22,
-        left=0.07,
-        right=0.99,
-        top=0.95,
-        bottom=0.07,
-    )
-    gs_plots = gs[:2, :].subgridspec(2, 3, wspace=0.24, hspace=0.26)
-    xlim, ylim = tmm_data_extents(combined)
-    lighten = lambda c: blend_color_toward_white(
-        c, OVERLAY_LIGHTER_ERROR_RATE_BLEND
-    )
-
-    plot_axes = []
-    for row in range(2):
-        row_axes = []
-        for col in range(3):
-            sharex = plot_axes[0][0] if plot_axes else None
-            sharey = plot_axes[0][0] if plot_axes else None
-            ax = fig.add_subplot(gs_plots[row, col], sharex=sharex, sharey=sharey)
-            row_axes.append(ax)
-        plot_axes.append(row_axes)
-
-    rate_specs = [
-        ("0.001", series_lighter, None),
-        ("0.0001", series_primary, None),
-    ]
-    for row, (rate_label, series, color_transform) in enumerate(rate_specs):
-        for col, use_case_label in enumerate(TMM_USE_CASE_LABELS):
-            ax = plot_axes[row][col]
-            plot_series_on_ax(ax, series, use_case_label, color_transform=color_transform)
-            if row == 0:
-                ax.set_title(use_case_label, pad=3)
-            if row == 1:
-                ax.set_xlabel("Physical qubits", labelpad=2)
-            if col == 0:
-                ax.set_ylabel("Runtime (s)", labelpad=2)
-            if col == len(TMM_USE_CASE_LABELS) - 1:
-                exp = int(round(np.log10(float(rate_label))))
-                ax.yaxis.set_label_position("right")
-                ax.set_ylabel(f"$p = 10^{{{exp}}}$", rotation=90, labelpad=8)
-            qre.apply_axes_style(ax)
-            ax.set_xlim(xlim)
-            ax.set_ylim(ylim)
-
-    add_grouped_legends(fig, gs, include_error_rate=False, legend_row=2)
-    return fig
-
-
 def platform_y_extent(series, arch_labels, benchmark="Fermi-Hubbard", use_case_label=None):
     ys = []
     for item in series:
@@ -724,7 +427,6 @@ def platform_y_extent(series, arch_labels, benchmark="Fermi-Hubbard", use_case_l
         return None
     return float(y_all.min()), float(y_all.max())
 
-
 def add_platform_bands(ax, series, benchmark="Fermi-Hubbard", use_case_label=None):
     for platform, arch_labels in FERMI_HUBBARD_SIDE_LEGEND_GROUPS:
         extent = platform_y_extent(
@@ -744,7 +446,6 @@ def add_platform_bands(ax, series, benchmark="Fermi-Hubbard", use_case_label=Non
             linewidth=0,
             zorder=0,
         )
-
 
 def add_platform_side_legends(fig, gs_cell, include_khan=False):
     height_ratios = [6, 3, 2] if include_khan else [5, 3, 2]
@@ -770,7 +471,6 @@ def add_platform_side_legends(fig, gs_cell, include_khan=False):
         legend = legend_ax.get_legend()
         if legend is not None:
             legend._legend_box.align = "left"
-
 
 def plot_fermi_hubbard_two_rate_panels(series_lighter, series_primary):
     apply_plot_style()
@@ -829,7 +529,6 @@ def plot_fermi_hubbard_two_rate_panels(series_lighter, series_primary):
     add_platform_side_legends(fig, gs[0, 1], include_khan=False)
     return fig
 
-
 def plot_tmm_use_case_two_rate_panels(series_lighter, series_primary, use_case_label):
     apply_plot_style()
     fig = plt.figure(figsize=(7.6, 4.2))
@@ -878,13 +577,11 @@ def plot_tmm_use_case_two_rate_panels(series_lighter, series_primary, use_case_l
     add_platform_side_legends(fig, gs[0, 1], include_khan=False)
     return fig
 
-
 def save_figure(fig, output_path):
     output_path.parent.mkdir(exist_ok=True)
     fig.savefig(output_path, bbox_inches="tight", pad_inches=0.03, dpi=200)
     plt.close(fig)
     print(f"Saved {output_path.resolve()}")
-
 
 def build_tav_rows_with_magic_prefix(
     spec,
@@ -916,8 +613,18 @@ def build_tav_rows_with_magic_prefix(
     variants, _ = qre.load_transversal_variants(spec)
     total_t_gates = variants[0]["total_cycles"] * variants[0]["t_count_per_cycle"]
 
+    # Effective factory period including the zero-level stall (FH and QPE-Abs at
+    # p = 1e-3); matches the period used in qre.build_tav_rows.
+    period = qre.T_STATE_FACTORY_PERIOD
+    if (
+        spec["use_case"] in ZERO_LEVEL_OVERHEAD_USE_CASES
+        and qre.DISTANCE_ERROR_RATE == ZERO_LEVEL_OVERHEAD_RATE
+        and distance_error_model == "circuit"  # photonics only; atoms unchanged
+    ):
+        period += qre.ZERO_LEVEL_STALL
+
     prefix = []
-    for num_factories in range(1, qre.T_STATE_FACTORY_PERIOD):
+    for num_factories in range(1, math.ceil(period)):
         num_buffer_buses = qre.buffer_bus_count(num_factories)
         total_logical_qubits = (
             system_qubits
@@ -925,7 +632,7 @@ def build_tav_rows_with_magic_prefix(
             + qre.BUFFER_BUS_TILES * num_buffer_buses
         )
         magic_limited_cycles = (
-            total_t_gates * qre.T_STATE_FACTORY_PERIOD / num_factories
+            total_t_gates * period / num_factories
         )
         physical_qubits = int(
             round(total_logical_qubits * 2 * (code_distance ** 2))
@@ -945,7 +652,6 @@ def build_tav_rows_with_magic_prefix(
             }
         )
     return prefix + rows, source
-
 
 # Cultivation cycles per produced T state, indexed by physical error rate
 # (the value of qre.DISTANCE_ERROR_RATE during plot construction).
@@ -971,16 +677,22 @@ CULTIVATION_CYCLES_PER_STATE_BY_RATE = {
     "0.0001": 12 * 1.5,
 }
 
-
 # Trans-parity distillation: small, slow t-AV factory variant.
 # 7 logical qubits per factory, 1 magic state per 71 code cycles, no buffer bus.
 # Same Bell-pair workspace accounting as the standard t-AV (uses the variant's avg_bp
 # in the compute-limited regime, 0 BP in the magic-limited regime).
 TAV_PARITY_FACTORY_TILES = 7
+
 TAV_PARITY_FACTORY_PERIOD = 59
+
+# Zero-level distillation overhead: extra code cycles added to each parity
+# factory's per-magic-state period, applied to FH and QPE-Abs at p = 1e-3 only.
+ZERO_LEVEL_DIST_OVERHEAD = 15 * 13.1
+ZERO_LEVEL_OVERHEAD_USE_CASES = {"single_trotter_step", "trotter_full_qpe"}
+ZERO_LEVEL_OVERHEAD_RATE = "0.001"
+
 # Magic-limited n_fac samples (1..period-1 is too many points; pick a few well-spaced ones).
 TAV_PARITY_MAGIC_LIMITED_N = [1, 2, 4, 8, 16, 24, 32, 40]
-
 
 def build_tav_parity_dist_rows(
     spec,
@@ -1015,6 +727,15 @@ def build_tav_parity_dist_rows(
         else qre.NEUTRAL_ATOMS_CODE_CYCLE_SECONDS
     )
     total_t_gates = variants[0]["total_cycles"] * variants[0]["t_count_per_cycle"]
+    # Per-factory period including the zero-level distillation overhead
+    # (FH and QPE-Abs at p = 1e-3 only).
+    period = TAV_PARITY_FACTORY_PERIOD
+    if (
+        spec["use_case"] in ZERO_LEVEL_OVERHEAD_USE_CASES
+        and qre.DISTANCE_ERROR_RATE == ZERO_LEVEL_OVERHEAD_RATE
+        and distance_error_model == "circuit"  # photonics only; atoms unchanged
+    ):
+        period += ZERO_LEVEL_DIST_OVERHEAD
 
     rows = []
     for num_factories in TAV_PARITY_MAGIC_LIMITED_N:
@@ -1022,7 +743,7 @@ def build_tav_parity_dist_rows(
             system_qubits + TAV_PARITY_FACTORY_TILES * num_factories
         )
         magic_limited_cycles = (
-            total_t_gates * TAV_PARITY_FACTORY_PERIOD / num_factories
+            total_t_gates * period / num_factories
         )
         physical_qubits = int(round(total_logical_qubits * 2 * (code_distance ** 2)))
         rows.append(
@@ -1043,7 +764,7 @@ def build_tav_parity_dist_rows(
         t_count_per_cycle = variant["t_count_per_cycle"]
         avg_bell_pairs = variant["avg_bell_pairs"]
         total_cycles = variant["total_cycles"]
-        num_factories = math.ceil(TAV_PARITY_FACTORY_PERIOD * t_count_per_cycle)
+        num_factories = math.ceil(period * t_count_per_cycle)
         total_logical_qubits = (
             system_qubits
             + avg_bell_pairs
@@ -1066,6 +787,76 @@ def build_tav_parity_dist_rows(
         )
     return rows, source
 
+def build_tav_parity_no_parallel_rows(
+    spec,
+    *,
+    distance_architecture,
+    distance_error_model,
+    runtime_label,
+    code_cycle_seconds=None,
+):
+    """Parity-dist t-AV without parallel T-injection (no bridge qubits).
+
+    Factories scale as in build_tav_parity_dist_rows, but consumption is capped
+    at 1 T per cycle: once n_fac reaches the compute limit (n_fac >= period),
+    extra factories buy nothing and the runtime plateaus at the sequential
+    compute limit (total_t_gates cycles).
+    """
+    variants, source = qre.load_transversal_variants(spec)
+    code_distance = qre.min_distance_from_csv(
+        spec["circuit"],
+        spec["use_case"],
+        distance_architecture,
+        distance_error_model,
+        qre.DISTANCE_ERROR_RATE,
+    )
+    system_qubits = qre.SYSTEM_QUBITS_T_AV_BY_CIRCUIT[spec["circuit"]]
+    cycle_seconds = (
+        code_cycle_seconds
+        if code_cycle_seconds is not None
+        else qre.NEUTRAL_ATOMS_CODE_CYCLE_SECONDS
+    )
+    total_t_gates = variants[0]["total_cycles"] * variants[0]["t_count_per_cycle"]
+    period = TAV_PARITY_FACTORY_PERIOD
+    if (
+        spec["use_case"] in ZERO_LEVEL_OVERHEAD_USE_CASES
+        and qre.DISTANCE_ERROR_RATE == ZERO_LEVEL_OVERHEAD_RATE
+        and distance_error_model == "circuit"  # photonics only; atoms unchanged
+    ):
+        period += ZERO_LEVEL_DIST_OVERHEAD
+
+    # Sample the magic-limited slope, the kink at n_fac = period, and the
+    # plateau out to the same max n_fac as the parity-dist curve.
+    max_t_count = max(variant["t_count_per_cycle"] for variant in variants)
+    n_fac_max = math.ceil(period * max_t_count)
+    sample_ns = [n for n in TAV_PARITY_MAGIC_LIMITED_N if n < period]
+    n = math.ceil(period)
+    while n < n_fac_max:
+        sample_ns.append(n)
+        n *= 2
+    sample_ns.append(n_fac_max)
+
+    rows = []
+    for num_factories in sample_ns:
+        cycles = total_t_gates * max(period / num_factories, 1.0)
+        total_logical_qubits = (
+            system_qubits + TAV_PARITY_FACTORY_TILES * num_factories
+        )
+        physical_qubits = int(round(total_logical_qubits * 2 * (code_distance ** 2)))
+        rows.append(
+            {
+                "t_count_per_cycle": 1,
+                "avg_bell_pairs": 0.0,
+                "num_factories": num_factories,
+                "total_logical_qubits": total_logical_qubits,
+                "total_cycles": int(round(cycles)),
+                "code_distance": int(code_distance),
+                "physical_qubits": physical_qubits,
+                "runtime_seconds": cycles * cycle_seconds,
+                "runtime_label": runtime_label,
+            }
+        )
+    return rows, source
 
 def build_cultivation_rows_zero_bp_magic_limited(
     spec,
@@ -1109,7 +900,6 @@ def build_cultivation_rows_zero_bp_magic_limited(
         return rows, source
     finally:
         qre.CULTIVATION_CYCLES_PER_STATE = previous_cycles_per_state
-
 
 def build_all_plot_series(distance_error_rate):
     """Build plot series for a logical error rate column; restores qre.DISTANCE_ERROR_RATE."""
@@ -1164,6 +954,19 @@ def build_all_plot_series(distance_error_rate):
                 runtime_label="parity surface-code Fowler model",
                 code_cycle_seconds=qre.PHOTONICS_CODE_CYCLE_SECONDS,
             )
+            tav_no_parallel_atoms_rows, _ = build_tav_parity_no_parallel_rows(
+                spec,
+                distance_architecture="t-av",
+                distance_error_model="atoms",
+                runtime_label="no-parallelization atoms error model",
+            )
+            tav_no_parallel_fowler_rows, _ = build_tav_parity_no_parallel_rows(
+                spec,
+                distance_architecture="transversal",
+                distance_error_model="circuit",
+                runtime_label="no-parallelization surface-code Fowler model",
+                code_cycle_seconds=qre.PHOTONICS_CODE_CYCLE_SECONDS,
+            )
             plot_series.extend(
                 qre.build_plot_series(
                     spec,
@@ -1175,10 +978,16 @@ def build_all_plot_series(distance_error_rate):
                     tav_ls_factory_rows=tav_ls_factory_rows,
                 )
             )
-            for label, parity_rows in [
+            parity_series = [
                 ("t-AV (parity atoms)", tav_parity_atoms_rows),
                 ("t-AV (parity Fowler)", tav_parity_fowler_rows),
-            ]:
+            ]
+            if PLOT_NO_PARALLEL:
+                parity_series += [
+                    ("t-AV (parity atoms, no-par)", tav_no_parallel_atoms_rows),
+                    ("t-AV (parity Fowler, no-par)", tav_no_parallel_fowler_rows),
+                ]
+            for label, parity_rows in parity_series:
                 plot_series.append(
                     {
                         "benchmark": spec["circuit"],
@@ -1201,35 +1010,29 @@ def build_all_plot_series(distance_error_rate):
 
 def main():
     plot_series_0001 = build_all_plot_series("0.0001")
-    save_figure(plot_tmm_figure(plot_series_0001), OUTPUT_TMM_PDF)
-    save_figure(
-        plot_fermi_hubbard_figure(plot_series_0001), OUTPUT_FERMI_HUBBARD_PDF
-    )
-
     plot_series_001 = build_all_plot_series("0.001")
-    save_figure(
-        plot_tmm_figure_overlay(plot_series_001, plot_series_0001),
-        OUTPUT_TMM_OVERLAY_PDF,
-    )
-    save_figure(
-        plot_tmm_two_rate_grid(plot_series_001, plot_series_0001),
-        OUTPUT_TMM_TWO_RATE_GRID_PDF,
-    )
-    save_figure(
-        plot_fermi_hubbard_figure_overlay(plot_series_001, plot_series_0001),
-        OUTPUT_FERMI_HUBBARD_OVERLAY_PDF,
-    )
     save_figure(
         plot_fermi_hubbard_two_rate_panels(plot_series_001, plot_series_0001),
         OUTPUT_FERMI_HUBBARD_TWO_RATE_PDF,
     )
-    for use_case_label in TMM_USE_CASE_LABELS:
-        save_figure(
-            plot_tmm_use_case_two_rate_panels(
-                plot_series_001, plot_series_0001, use_case_label
-            ),
-            OUTPUT_TMM_USE_CASE_TWO_RATE_PDFS[use_case_label],
-        )
+    save_figure(
+        plot_tmm_use_case_two_rate_panels(
+            plot_series_001, plot_series_0001, "Stat-QPE-gap"
+        ),
+        OUTPUT_TMM_USE_CASE_TWO_RATE_PDFS["Stat-QPE-gap"],
+    )
+    save_figure(
+        plot_tmm_use_case_two_rate_panels(
+            plot_series_001, plot_series_0001, "QPE-Abs"
+        ),
+        OUTPUT_TMM_USE_CASE_TWO_RATE_PDFS["QPE-Abs"],
+    )
+    save_figure(
+        plot_tmm_use_case_two_rate_panels(
+            plot_series_001, plot_series_0001, "Stat-QPE"
+        ),
+        OUTPUT_TMM_USE_CASE_TWO_RATE_PDFS["Stat-QPE"],
+    )
 
 
 if __name__ == "__main__":

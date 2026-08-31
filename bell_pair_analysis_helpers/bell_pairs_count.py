@@ -53,9 +53,9 @@ DATA_DIR = HERE / "data"
 OUTPUT_FILE = DATA_DIR / f"bell_pairs_sweep_{CIRCUIT}.npz"
 
 
-# ---------------------------------------------------------------------------
-# Streaming loader: extract only what's needed per sequence, discard hexagons
-# ---------------------------------------------------------------------------
+# ----------------
+# Streaming loader
+# ----------------
 
 def _extract_internal_bp(obj):
     """Count unique 'b*' tags in this sequence's hexagon ports."""
@@ -114,7 +114,6 @@ def load_compact_sequences(filename):
 # Backward-compatible alias used by older callers.
 load_sequences = load_compact_sequences
 
-
 # ---------------------------------------------------------------------------
 # Per-sequence summaries (use precomputed values if present)
 # ---------------------------------------------------------------------------
@@ -147,9 +146,8 @@ def get_qubits_used(sequence):
                 qubits.add(port_val)
     return qubits
 
-
 # ---------------------------------------------------------------------------
-# Scheduler (strict FIFO) and per-cycle bell-pair counting
+# Scheduler and per-cycle bell-pair counting
 # ---------------------------------------------------------------------------
 
 def schedule_sequences_with_indices(sequences, total_capacity):
