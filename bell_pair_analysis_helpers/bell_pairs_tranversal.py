@@ -45,7 +45,11 @@ DATA_DIR = HERE / "data"
 OUTPUT_FILE = DATA_DIR / f"bell_pairs_sweep_transversal_{CIRCUIT}.npz"
 
 
-TILE = {"s": 1, "h": 1, "cx": 2, "t": 2, "sdg": 1}
+TILE = {"s": 1, "h": 1, "cx": 2, "t": 2, "tdg": 2, "sdg": 1}
+
+# tdg consumes a T state exactly like t (T† = magic-state injection + Clifford
+# correction), so both count against the per-cycle T budget.
+T_GATES = {"t", "tdg"}
 BELL_PAIR_TILES = 1
 
 
@@ -95,7 +99,7 @@ def reaction_depth(row_up_qubits, row_gates):
     """Longest sequential chain of T gates on any single qubit within the row."""
     counts = Counter()
     for qubits, gate in zip(row_up_qubits, row_gates):
-        if gate == "t":
+        if gate in T_GATES:
             for q in qubits:
                 counts[q] += 1
     return max(counts.values()) if counts else 0
@@ -156,7 +160,7 @@ def schedule_and_count_bell_pairs(sequences, t_per_cycle=t_count_per_cycle):
         pack_down_qubits.append(downs)
         pack_gates.append(gate)
         comp_tiles += tiles_for_gate(gate)
-        if gate == "t":
+        if gate in T_GATES:
             t_in_row += 1
             if t_in_row >= t_per_cycle:
                 flush_row()

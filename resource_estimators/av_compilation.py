@@ -23,7 +23,7 @@ C_T_SINGLE_STAGE = 17.5
 # t-AV with dirty-state init free and buffer bus folded into injection) plus
 # injection (3.5) block budget. Dividing the summed blocks by the code distance
 # d recovers the per-gate t-AV costs used in the paper (1/d, 2/d, 137/d).
-TAV_BLOCKS = {"s": 1, "sdg": 1, "h": 1, "cx": 2, "t": 137}
+TAV_BLOCKS = {"s": 1, "sdg": 1, "h": 1, "cx": 2, "t": 137, "tdg": 137}
 
 # 0-dist + trans-dist: zero-level distillation performed on the buffer-bus
 # qubits via code conversion adds 15 patches x 13 code cycles = 195 blocks per
@@ -65,7 +65,7 @@ def total_tav_blocks_and_t_count(json_file_path):
             if match:
                 gate = match.group(1)
                 total += TAV_BLOCKS.get(gate, 0)
-                if gate == "t":
+                if gate in ("t", "tdg"):
                     t_count += 1
     return total, t_count
 

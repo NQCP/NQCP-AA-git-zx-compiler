@@ -17,10 +17,11 @@ if distillation:
     d = 17 # heisenberg is 15
     time_to_distill = 133.5/d  # active t-AV of transversal 15-to-1 per T (dirty-state init free, bus folded into injection)
     time_to_inject = 3.5/d  
-    ACTIVE_VOLUME = {'s': 1/d, 
-                     't': time_to_distill + time_to_inject, 
-                     'h': 1/d, 
-                     'cx': 2/d, 
+    ACTIVE_VOLUME = {'s': 1/d,
+                     't': time_to_distill + time_to_inject,
+                     'tdg': time_to_distill + time_to_inject,
+                     'h': 1/d,
+                     'cx': 2/d,
                      'sdg': 1/d}
 
 # cultivation assumptions:
@@ -28,10 +29,11 @@ if cultivation:
     time_to_cultivate = 12/d # code cycles (rounds per attempt; App. fold-transversal f=5 stage count)
     time_to_inject = 3.5/d # code cyles 
     qubits_per_factory = 787
-    ACTIVE_VOLUME = {'s': 1/d, 
-                     't': (time_to_cultivate + time_to_inject), 
-                     'h': 1/d, 
-                     'cx': 2/d, 
+    ACTIVE_VOLUME = {'s': 1/d,
+                     't': (time_to_cultivate + time_to_inject),
+                     'tdg': (time_to_cultivate + time_to_inject),
+                     'h': 1/d,
+                     'cx': 2/d,
                      'sdg': 1/d}
 
 
@@ -50,7 +52,7 @@ def parse_qasm_line(line):
     if gate in IGNORE_GATES:
         return None
 
-    if gate not in {'s', 't', 'h', 'cx', 'sdg'}:
+    if gate not in {'s', 't', 'tdg', 'h', 'cx', 'sdg'}:
         return None
 
     qubit_part = ' '.join(parts[1:]).rstrip(';')
