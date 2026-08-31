@@ -19,7 +19,8 @@ W_gate = UnitaryGate(W, label='W')
 def rot_decompose(qc, theta, qubit):
     epsilon = mpmath.mpmathify(str(precision))
     theta = mpmath.mpmathify(str(theta))
-    gates = gridsynth_gates(theta=2*theta, epsilon=epsilon)
+    # gates = gridsynth_gates(theta=2*theta, epsilon=epsilon)
+    gates = gridsynth_gates(theta=theta, epsilon=epsilon) # claude improve tmm
 
     gate_dcomp_list = gates    
     gate_dcomp_list = gate_dcomp_list[::-1]
