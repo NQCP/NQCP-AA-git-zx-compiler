@@ -10,8 +10,8 @@ Run from the project root:
     python resource_estimators/space-time-volume-estimator.py
 """
 
-import qubits_runtime_estimates as q
-from qubits_runtime_estimates import (
+import qubits_runtime_estimates_v2 as q
+from qubits_runtime_estimates_v2 import (
     USE_CASES,
     LS_FACTORY_DISTANCE,
     build_av_rows,
@@ -22,9 +22,16 @@ from qubits_runtime_estimates import (
 )
 from av_compilation import (
     C_T,
+    C_T_SINGLE_STAGE,
+    ZERO_DIST_EXTRA_T_BLOCKS,
     split_active_volume_from_csv,
-    total_tav_blocks,
+    total_tav_blocks_and_t_count,
 )
+
+# FH / QPE-Abs need two-level (concatenated) distillation only at p = 1e-3; at
+# p = 1e-4 a single-stage 15-to-1 suffices. Stat-QPE / Stat-QPE-gap are always
+# single-stage. (App. tab:lsdist-configs / tab:15-to-1-comparison.)
+CONCAT_FACTORY_USE_CASES = {"single_trotter_step", "trotter_full_qpe"}
 
 ARCHITECTURES = [
     "Baseline",
@@ -40,6 +47,10 @@ ARCHITECTURES = [
 ACTIVE_VOL_LABELS = {"AV", "t-AV (atoms)", "t-AV (photonics)"}
 
 ERROR_RATES = ("0.001", "0.0001")
+
+# Cultivation cycles per state, per physical error rate (App. fold-transversal
+# f=5 stage count: r_att = 12 code cycles/attempt; 5 attempts at 1e-3, 1.5 at 1e-4).
+CULTIVATION_CYCLES_PER_STATE_BY_RATE = {"0.001": 12 * 5, "0.0001": 12 * 1.5}
 
 
 def runtime_in_code_cycles(row, arch):
@@ -66,7 +77,10 @@ def rows_for(spec, arch):
     if arch == "AV":
         return build_av_rows(spec)[0]
     if arch in ("Baseline", "Compact"):
-        return build_superconducting_rows(spec, arch)
+        # Wider factory sweep than the runtime figures (which use the default
+        # 20): with the concatenated factory at p = 1e-3 the Baseline STV
+        # minimum sits at n = 4*dm2 = 52 factories (one T per clock cycle).
+        return build_superconducting_rows(spec, arch, max_factories=60)
     if arch in ("t-AV (atoms)", "t-AV (photonics)"):
         arch_key = "t-av" if arch == "t-AV (atoms)" else "transversal"
         err_model = "atoms" if arch_key == "t-av" else "circuit"
@@ -103,7 +117,17 @@ def active_volumes_physical(spec, rate):
     """
     steps = spec["trotter_steps"]
     cm_blocks, n_rotations = split_active_volume_from_csv(spec["ppr_file"])
-    tav_blocks = total_tav_blocks(spec["transversal_json"]) * steps
+    tav_blocks_step, tav_t_count_step = total_tav_blocks_and_t_count(
+        spec["transversal_json"]
+    )
+    tav_blocks = tav_blocks_step * steps
+    # 0-dist + trans-dist for photonics (circuit model) at p = 1e-3 on the
+    # benchmarks single-stage 15-to-1 cannot supply (FH, QPE-Abs): each T
+    # carries an extra ZERO_DIST_EXTRA_T_BLOCKS. Atoms (erasure model) keep
+    # plain trans-dist via injected-error post-selection.
+    tav_blocks_zero_dist = (
+        tav_blocks_step + tav_t_count_step * ZERO_DIST_EXTRA_T_BLOCKS
+    ) * steps
     d_fac = LS_FACTORY_DISTANCE[spec["use_case"]]
 
     out = {}
@@ -112,12 +136,23 @@ def active_volumes_physical(spec, rate):
             spec["circuit"], spec["use_case"], arch, err_model, rate
         )
         if transversal:
-            phys = (tav_blocks / d) * 2 * d ** 3
+            blocks = tav_blocks
+            if (
+                err_model == "circuit"
+                and spec["use_case"] in CONCAT_FACTORY_USE_CASES
+                and rate == "0.001"
+            ):
+                blocks = tav_blocks_zero_dist
+            phys = (blocks / d) * 2 * d ** 3
         else:
-            phys = (
-                cm_blocks * 2 * d ** 3
-                + n_rotations * C_T * 2 * d_fac ** 3
-            ) * steps
+            # AV distillation: concatenated factory (25.75 blocks/T at d_fac)
+            # only for FH / QPE-Abs at p = 1e-3; otherwise single-stage 15-to-1
+            # (17.5 blocks/T) run in-fabric at the algorithm distance d.
+            if spec["use_case"] in CONCAT_FACTORY_USE_CASES and rate == "0.001":
+                distill = n_rotations * C_T * 2 * d_fac ** 3
+            else:
+                distill = n_rotations * C_T_SINGLE_STAGE * 2 * d ** 3
+            phys = (cm_blocks * 2 * d ** 3 + distill) * steps
         out[label] = {"d": d, "phys": phys}
     return out
 
@@ -136,6 +171,7 @@ def main():
     active = {}
     for rate in ERROR_RATES:
         q.DISTANCE_ERROR_RATE = rate
+        q.CULTIVATION_CYCLES_PER_STATE = CULTIVATION_CYCLES_PER_STATE_BY_RATE[rate]
         results[rate] = {}
         active[rate] = {}
         for spec in USE_CASES:
