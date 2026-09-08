@@ -13,11 +13,11 @@ targets are supported:
 volume, and transversal active volume, each with its hardware
 modality.](compilation-architectures.png)
 
-| Connectivity | Architecture | Instruction set |
-| --- | --- | --- |
-| Nearest-neighbour | baseline / compact lattice surgery | Pauli product rotations executed via Pauli product measurements |
-| Limited non-local (log N) | active volume (AV) | networks of logical blocks (oriented ZX diagrams) |
-| Effectively all-to-all | transversal active volume (t-AV) | networks of *taubles* (transversal logical blocks) |
+| Connectivity | Architecture | Instruction set | Reference |
+| --- | --- | --- | --- |
+| Nearest-neighbour | baseline / compact lattice surgery | Pauli product rotations executed via Pauli product measurements | Litinski, [Quantum **3**, 128 (2019)](https://doi.org/10.22331/q-2019-03-05-128) |
+| Limited non-local (log N) | active volume (AV) | networks of logical blocks (oriented ZX diagrams) | Litinski & Nickerson, [arXiv:2211.15465](https://arxiv.org/abs/2211.15465) |
+| Effectively all-to-all | transversal active volume (t-AV) | networks of *taubles* (transversal logical blocks) | this work |
 
 ## Install
 
