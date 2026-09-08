@@ -1,13 +1,8 @@
 # A Platform-aware Compilation Framework for Fault-tolerant Quantum Computation
 
-Compilers and resource estimators for fault-tolerant quantum algorithms across three
-hardware connectivity classes, together with the scripts that produce the figures and
-tables of the accompanying manuscript.
-
-Given a logical Clifford+T circuit, the code re-compiles it into a hardware-compatible
-fault-tolerant instruction set and reports physical-qubit count, runtime, bridge-qubit
-demand for parallelization, space-time volume, and reaction depth. Three compilation
-targets are supported:
+A platform-aware compilation framework that re-compiles a quantum circuit into
+a hardware-compatible instruction set as well as fault-tolerant operations, and provides end-to-end
+resource estimates in terms of physical-qubit count, time-to-solution, and classical processing time.
 
 ![Overview of the compilation architectures: nearest-neighbour lattice surgery, active
 volume, and transversal active volume, each with its hardware
@@ -76,7 +71,7 @@ helpers.
 └── plotstylefile*.mplstyle                    matplotlib styles
 ```
 
-Generated artefacts are written to `logical_network_files/`, each helper's `data/`
+Generated logical networks are written to `logical_network_files/`, each helper's `data/`
 directory, and `paper_plots/`; none of these are tracked (see **Regenerating
 intermediate data**).
 
