@@ -4,7 +4,7 @@ Compilers and resource estimators for fault-tolerant quantum algorithms across t
 hardware connectivity classes, together with the scripts that produce the figures and
 tables of the accompanying manuscript.
 
-Given a logical Clifford+$T$ circuit, the code re-compiles it into a hardware-compatible
+Given a logical Clifford+T circuit, the code re-compiles it into a hardware-compatible
 fault-tolerant instruction set and reports physical-qubit count, runtime, bridge-qubit
 demand for parallelization, space-time volume, and reaction depth. Three compilation
 targets are supported:
@@ -16,7 +16,7 @@ modality.](compilation-architectures.png)
 | Connectivity | Architecture | Instruction set |
 | --- | --- | --- |
 | Nearest-neighbour | baseline / compact lattice surgery | Pauli product rotations executed via Pauli product measurements |
-| Limited non-local ($\log N$) | active volume (AV) | networks of logical blocks (oriented ZX diagrams) |
+| Limited non-local (log N) | active volume (AV) | networks of logical blocks (oriented ZX diagrams) |
 | Effectively all-to-all | transversal active volume (t-AV) | networks of *taubles* (transversal logical blocks) |
 
 ## Install
@@ -125,19 +125,19 @@ expect long runtimes on that benchmark.
 
 ## Conventions
 
-- A logical qubit is a rotated surface-code patch of $2d^2$ physical qubits (measurement
+- A logical qubit is a rotated surface-code patch of 2d² physical qubits (measurement
   ancillas included).
-- One logical cycle is $d$ code cycles. Lattice-surgery operations cost one logical cycle;
+- One logical cycle is d code cycles. Lattice-surgery operations cost one logical cycle;
   transversal operations cost one code cycle.
-- Block counts in `av_compilation.py` are distance-independent; dividing by $d$ gives the
-  per-gate cost in logical-block units, and multiplying a patch count by $2d^2$ converts a
-  logical space-time volume to physical qubit $\times$ code cycles.
+- Block counts in `av_compilation.py` are distance-independent; dividing by d gives the
+  per-gate cost in logical-block units, and multiplying a patch count by 2d² converts a
+  logical space-time volume to physical qubit × code cycles.
 - Magic-state factory models and their per-state periods and footprints are named
   constants at the top of `resource_estimators/qubits_runtime_estimates_v2.py` and
   `distillation-stv-estimates.py`.
-- Noise models: circuit-level $p_L = 0.1(100p)^{(d+1)/2}$, and an erasure-conversion form
-  $p_L = 0.03(25p)^{(d+1)/2}$ for neutral atoms; distances are chosen as the smallest odd
-  $d$ with $n_Q n_C d\, p_L < \epsilon$ for a target failure budget $\epsilon = 0.01$.
+- Noise models: circuit-level p_L = 0.1·(100p)^[(d+1)/2], and an erasure-conversion form
+  p_L = 0.03·(25p)^[(d+1)/2] for neutral atoms; distances are chosen as the smallest odd
+  d with n_Q · n_C · d · p_L < ε for a target failure budget ε = 0.01.
 
 ## License
 
