@@ -23,6 +23,7 @@ paper_figures/
 # Local-only helpers (kept out of the published repository)
 circuit_compilation_helpers/15to1.py
 circuit_compilation_helpers/connectivity_fermi.py
+neutral_atoms_plot_standalone/
 
 # Haskell build artifacts
 feynman/dist-newstyle/

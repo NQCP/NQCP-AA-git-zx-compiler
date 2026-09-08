@@ -58,7 +58,6 @@ reaction_time_analysis/               reaction depth and stalling phase diagrams
 logical_network_parallelization_plot_helpers/   PPR parallelization vs workspace capacity
 transversal-limited-non-local/        standalone architecture simulator (placement,
                                       routing, scheduling, factories)
-neutral_atoms_plot_standalone/        self-contained single-figure reproduction
 
 ppr_circuits/                         input QASM and generated PPR circuits
 hamiltonians/                         TMM-PPP fermionic and Jordan-Wigner Hamiltonians
@@ -135,12 +134,3 @@ expect long runtimes on that benchmark.
 - Noise models: circuit-level $p_L = 0.1(100p)^{(d+1)/2}$, and an erasure-conversion form
   $p_L = 0.03(25p)^{(d+1)/2}$ for neutral atoms; distances are chosen as the smallest odd
   $d$ with $n_Q n_C d\, p_L < \epsilon$ for a target failure budget $\epsilon = 0.01$.
-
-## Standalone example
-
-`neutral_atoms_plot_standalone/` reproduces one runtime-vs-qubit figure from bundled data
-with no dependency on the rest of the repository:
-
-```bash
-cd neutral_atoms_plot_standalone && python plot_neutral_atoms.py
-```
