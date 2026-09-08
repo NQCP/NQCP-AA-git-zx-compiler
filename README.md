@@ -1,4 +1,4 @@
-# Platform-aware fault-tolerant compilation and resource estimation
+# A Platform-aware Compilation Framework for Fault-tolerant Quantum Computation
 
 Compilers and resource estimators for fault-tolerant quantum algorithms across three
 hardware connectivity classes, together with the scripts that produce the figures and
