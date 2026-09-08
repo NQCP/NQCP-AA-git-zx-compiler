@@ -134,3 +134,7 @@ expect long runtimes on that benchmark.
 - Noise models: circuit-level $p_L = 0.1(100p)^{(d+1)/2}$, and an erasure-conversion form
   $p_L = 0.03(25p)^{(d+1)/2}$ for neutral atoms; distances are chosen as the smallest odd
   $d$ with $n_Q n_C d\, p_L < \epsilon$ for a target failure budget $\epsilon = 0.01$.
+
+## License
+
+Released under the MIT License; see [LICENSE](LICENSE).
