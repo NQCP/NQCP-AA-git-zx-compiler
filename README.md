@@ -34,7 +34,6 @@ circuit_compilation_helpers/        logical circuit -> PPR circuit
   commute_ppr_tableau.py              commute Cliffords to the end (commuted_ppr)
   FermiHubbardCircuit.py              symmetry-shifted Fermi-Hubbard Trotter circuits
   energy_error_plot_helper.py         TMM Trotter/synthesis energy-error study
-  15to1.py, connectivity_fermi.py     distillation circuit, connectivity analysis
 
 logical_network_compilation_helpers/
   logical_blocks.py                   PPR circuit -> AV logical-block network
