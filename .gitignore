@@ -24,6 +24,8 @@ paper_figures/
 circuit_compilation_helpers/15to1.py
 circuit_compilation_helpers/connectivity_fermi.py
 neutral_atoms_plot_standalone/
+resource_estimators/qubits_runtime_estimates.py
+resource_estimators/qubits_runtime_estimates_seperate.py
 
 # Haskell build artifacts
 feynman/dist-newstyle/
