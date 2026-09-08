@@ -9,6 +9,10 @@ fault-tolerant instruction set and reports physical-qubit count, runtime, bridge
 demand for parallelization, space-time volume, and reaction depth. Three compilation
 targets are supported:
 
+![Overview of the compilation architectures: nearest-neighbour lattice surgery, active
+volume, and transversal active volume, each with its hardware
+modality.](compilation-architectures.png)
+
 | Connectivity | Architecture | Instruction set |
 | --- | --- | --- |
 | Nearest-neighbour | baseline / compact lattice surgery | Pauli product rotations executed via Pauli product measurements |
