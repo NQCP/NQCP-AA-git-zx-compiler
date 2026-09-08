@@ -13,11 +13,11 @@ targets are supported:
 volume, and transversal active volume, each with its hardware
 modality.](compilation-architectures.png)
 
-| Connectivity | Architecture | Instruction set | Ref. |
-| --- | --- | --- | --- |
-| Nearest-neighbour | baseline / compact lattice surgery | Pauli product rotations executed via Pauli product measurements | [[1]](#ref1) |
-| Limited non-local (log N) | active volume (AV) | networks of logical blocks (oriented ZX diagrams) | [[2]](#ref2) |
-| Effectively all-to-all | transversal active volume (t-AV) | networks of *taubles* (transversal logical blocks) | [[3]](#ref3) |
+| Connectivity | Architecture | Instruction set |
+| --- | --- | --- |
+| Nearest-neighbour | baseline / compact lattice surgery [[1]](#ref1) | Pauli product rotations executed via Pauli product measurements |
+| Limited non-local (log N) | active volume (AV) [[2]](#ref2) | networks of logical blocks (oriented ZX diagrams) |
+| Effectively all-to-all | transversal active volume (t-AV), this work | networks of *taubles* (transversal logical blocks) |
 
 ## Install
 
@@ -159,10 +159,6 @@ with Lattice Surgery*, Quantum **3**, 128 (2019).
 <a id="ref2"></a>**[2]** D. Litinski and N. Nickerson, *Active volume: An architecture for
 efficient fault-tolerant quantum computers with limited non-local connections*,
 [arXiv:2211.15465](https://arxiv.org/abs/2211.15465) (2022).
-
-<a id="ref3"></a>**[3]** S. Patil, S. X. Chen, A. J. Bay-Smidt, S. A. Schäffer, P. Krogstrup,
-S. Paesani, and G. C. Solomon, *A Platform-aware Compilation Framework for Fault-tolerant
-Quantum Computation* (in preparation) — the manuscript this repository accompanies.
 
 ## License
 
