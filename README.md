@@ -33,41 +33,52 @@ helpers.
 ## Repository layout
 
 ```
-circuit_compilation_helpers/        logical circuit -> PPR circuit
-  ppr_functions.py                    QASM -> Pauli rotations (qasm_to_paulis)
-  commute_ppr_tableau.py              commute Cliffords to the end (commuted_ppr)
-  FermiHubbardCircuit.py              symmetry-shifted Fermi-Hubbard Trotter circuits
-  energy_error_plot_helper.py         TMM Trotter/synthesis energy-error study
-
-logical_network_compilation_helpers/
-  logical_blocks.py                   PPR circuit -> AV logical-block network
-  transversal-av-zx.py                QASM -> t-AV tauble network (JSON)
-
-resource_estimators/
-  qubits_runtime_estimates_v2.py      core: distances, per-architecture row builders
-  qubits_runtime_estimates_seperate_v2.py   runtime-vs-qubits paper figures
-  space-time-volume-estimator.py      per-benchmark STV / active-volume table
-  distance_estimator.py               minimum code distances -> distance_table.csv
-  distillation-stv-estimates.py       per-factory space-time volume vs distance
-  av_compilation.py                   active-volume and t-AV block accounting
-  baseline_estimates.py, av_estimates.py    lattice-surgery estimators
-  distance_table.csv                  generated distance table (tracked)
-
-bell_pair_analysis_helpers/           bridge-qubit (Bell-pair) demand
-  bell_pairs_count.py                   AV scheduler sweep over workspace capacity
-  bell_pairs_tranversal.py              t-AV scheduler sweep over T-per-cycle
-  plot_helpers.py                       bridge-qubit / speedup figures
-
-reaction_time_analysis/               reaction depth and stalling phase diagrams
-logical_network_parallelization_plot_helpers/   PPR parallelization vs workspace capacity
-transversal-limited-non-local/        standalone architecture simulator (placement,
-                                      routing, scheduling, factories)
-
-ppr_circuits/                         input QASM and generated PPR circuits
-hamiltonians/                         TMM-PPP fermionic and Jordan-Wigner Hamiltonians
-notebooks/logical_circuit.ipynb       logical circuit construction
-plotstylefile*.mplstyle               matplotlib styles
+.
+├── pipeline.py                                QASM → PPR → estimate (entry point)
+├── requirements.txt
+│
+├── circuit_compilation_helpers/               logical circuit → PPR circuit
+│   ├── logical_to_universal.py                  rotation synthesis (gridsynth)
+│   ├── ppr_functions.py                         QASM → Pauli rotations
+│   ├── commute_ppr_tableau.py                   commute Cliffords to the end
+│   ├── commute_ppr_optimized.py                 commutation helpers
+│   ├── FermiHubbardCircuit.py                   Fermi-Hubbard Trotter circuits
+│   └── energy_error_plot_helper.py              TMM Trotter/synthesis error study
+│
+├── logical_network_compilation_helpers/       circuit → logical network
+│   ├── logical_blocks.py                        PPR → AV logical-block network
+│   └── transversal-av-zx.py                     QASM → t-AV tauble network (JSON)
+│
+├── resource_estimators/                       distances, runtimes, volumes
+│   ├── qubits_runtime_estimates_v2.py           core: distances, row builders
+│   ├── qubits_runtime_estimates_seperate_v2.py  runtime-vs-qubits figures
+│   ├── space-time-volume-estimator.py           per-benchmark STV table
+│   ├── distance_estimator.py                    min distances → distance_table.csv
+│   ├── distillation-stv-estimates.py            per-factory STV vs distance
+│   ├── av_compilation.py                        AV / t-AV block accounting
+│   ├── baseline_estimates.py                    lattice-surgery estimator
+│   ├── av_estimates.py                          active-volume estimator
+│   └── distance_table.csv                       generated distance table
+│
+├── bell_pair_analysis_helpers/                bridge-qubit (Bell-pair) demand
+│   ├── bell_pairs_count.py                      AV sweep over workspace capacity
+│   ├── bell_pairs_tranversal.py                 t-AV sweep over T-per-cycle
+│   └── plot_helpers.py                          bridge-qubit / speedup figures
+│
+├── reaction_time_analysis/                    reaction depth, stalling diagrams
+├── logical_network_parallelization_plot_helpers/   PPR parallelization vs capacity
+├── transversal-limited-non-local/             architecture simulator (placement,
+│                                              routing, scheduling, factories)
+│
+├── ppr_circuits/                              input QASM and generated PPR circuits
+├── hamiltonians/                              TMM-PPP fermionic and JW Hamiltonians
+├── notebooks/logical_circuit.ipynb            logical circuit construction
+└── plotstylefile*.mplstyle                    matplotlib styles
 ```
+
+Generated artefacts are written to `logical_network_files/`, each helper's `data/`
+directory, and `paper_plots/`; none of these are tracked (see **Regenerating
+intermediate data**).
 
 ## Quick start
 
