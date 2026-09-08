@@ -13,11 +13,11 @@ targets are supported:
 volume, and transversal active volume, each with its hardware
 modality.](compilation-architectures.png)
 
-| Connectivity | Architecture | Instruction set | Reference |
+| Connectivity | Architecture | Instruction set | Ref. |
 | --- | --- | --- | --- |
-| Nearest-neighbour | baseline / compact lattice surgery | Pauli product rotations executed via Pauli product measurements | Litinski, [Quantum **3**, 128 (2019)](https://doi.org/10.22331/q-2019-03-05-128) |
-| Limited non-local (log N) | active volume (AV) | networks of logical blocks (oriented ZX diagrams) | Litinski & Nickerson, [arXiv:2211.15465](https://arxiv.org/abs/2211.15465) |
-| Effectively all-to-all | transversal active volume (t-AV) | networks of *taubles* (transversal logical blocks) | this work |
+| Nearest-neighbour | baseline / compact lattice surgery | Pauli product rotations executed via Pauli product measurements | [[1]](#ref1) |
+| Limited non-local (log N) | active volume (AV) | networks of logical blocks (oriented ZX diagrams) | [[2]](#ref2) |
+| Effectively all-to-all | transversal active volume (t-AV) | networks of *taubles* (transversal logical blocks) | [[3]](#ref3) |
 
 ## Install
 
@@ -149,6 +149,20 @@ expect long runtimes on that benchmark.
 - Noise models: circuit-level p_L = 0.1·(100p)^[(d+1)/2], and an erasure-conversion form
   p_L = 0.03·(25p)^[(d+1)/2] for neutral atoms; distances are chosen as the smallest odd
   d with n_Q · n_C · d · p_L < ε for a target failure budget ε = 0.01.
+
+## References
+
+<a id="ref1"></a>**[1]** D. Litinski, *A Game of Surface Codes: Large-Scale Quantum Computing
+with Lattice Surgery*, Quantum **3**, 128 (2019).
+[doi:10.22331/q-2019-03-05-128](https://doi.org/10.22331/q-2019-03-05-128)
+
+<a id="ref2"></a>**[2]** D. Litinski and N. Nickerson, *Active volume: An architecture for
+efficient fault-tolerant quantum computers with limited non-local connections*,
+[arXiv:2211.15465](https://arxiv.org/abs/2211.15465) (2022).
+
+<a id="ref3"></a>**[3]** S. Patil, S. X. Chen, A. J. Bay-Smidt, S. A. Schäffer, P. Krogstrup,
+S. Paesani, and G. C. Solomon, *A Platform-aware Compilation Framework for Fault-tolerant
+Quantum Computation* (in preparation) — the manuscript this repository accompanies.
 
 ## License
 
