@@ -1,8 +1,9 @@
 # A Platform-aware Compilation Framework for Fault-tolerant Quantum Computation
 
-A platform-aware compilation framework that re-compiles a quantum circuit into
-a hardware-compatible instruction set as well as fault-tolerant operations, and provides end-to-end
-resource estimates in terms of physical-qubit count, time-to-solution, and classical processing time.
+[![arXiv](https://img.shields.io/badge/arXiv-2007.10893-b31b1b.svg)](https://arxiv.org/abs/2609.08908)
+
+A platform-aware compilation framework that re-compiles a quantum circuit into a hardware-compatible instruction set as well as fault-tolerant operations, and provides end-to-end resource estimates in terms of physical-qubit count, time-to-solution, and classical processing time.
+
 
 ![Overview of the compilation architectures: nearest-neighbour lattice surgery, active
 volume, and transversal active volume, each with its hardware
@@ -145,9 +146,15 @@ expect long runtimes on that benchmark.
   p_L = 0.03·(25p)^[(d+1)/2] for neutral atoms; distances are chosen as the smallest odd
   d with n_Q · n_C · d · p_L < ε for a target failure budget ε = 0.01.
 
+## Cite this work
+
+If you use this repository, please cite the paper and the main supporting references used in the implementation:
+
+- Srushti Patil, Susan X. Chen, Andreas Juul Bay-Smidt, Stefan Alaric Schäffer, Peter Krogstrup, Stefano Paesani, Gemma C. Solomon, *A Platform-aware Compilation Framework for Fault-tolerant Quantum Computation*, arXiv:2609.08908, 2026. [https://arxiv.org/abs/2609.08908](https://arxiv.org/abs/2609.08908)
+
 ## References
 
-<a id="ref1"></a>**[1]** D. Litinski, *A Game of Surface Codes: Large-Scale Quantum Computing
+<a id="ref1"></a>**[1]** D. Litinski, *A Game of Surface Codes: Large-Scale Quantum Computing 
 with Lattice Surgery*, Quantum **3**, 128 (2019).
 [doi:10.22331/q-2019-03-05-128](https://doi.org/10.22331/q-2019-03-05-128)
 
